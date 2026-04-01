@@ -1,31 +1,29 @@
-# Context Bar for Claude Code
+# Context Statusline for Claude Code
 
 A minimal statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that shows real-time context window usage with a gradient progress bar.
 
+<p align="center">
+  <img width="351" height="114" alt="Context statusline screenshot" src="https://github.com/user-attachments/assets/8efdc2dd-d2ec-4ff0-90e3-42a495cc08cd" />
+</p>
+
 ```
-── Claude Opus 4.6 │ 1000K context │ 12m3s │ $0.847
-◉ CONTEXT: ⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁ 69%
+── Claude Opus 4.6 (1M context) │ 12m3s │ $0.847
+◉ CONTEXT: ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁ ⛁  37%
 ```
-<img width="351" height="114" alt="image" src="https://github.com/user-attachments/assets/8efdc2dd-d2ec-4ff0-90e3-42a495cc08cd" />
 
-The bar gradient shifts from green -> yellow -> orange -> red as context fills up.
-
-## What it shows
-
-- Context usage as a gradient bar with percentage
-- Active model name
-- Context window size (200K / 1M)
-- Session duration
-- Estimated session cost (based on token counts and model pricing)
+The bar gradient shifts from green → yellow → orange → red as context fills up.
 
 ## Install
 
+Requires `jq` — install with `brew install jq` (macOS) or `sudo apt install jq` (Debian/Ubuntu).
+
 ```bash
-curl -o ~/.claude/context-bar.sh https://raw.githubusercontent.com/Esk3nder/context_statusline/main/context-bar.sh
+curl -o ~/.claude/context-bar.sh \
+  https://raw.githubusercontent.com/Esk3nder/context-statusline/main/context-bar.sh
 chmod +x ~/.claude/context-bar.sh
 ```
 
-Add the statusline to `~/.claude/settings.json`:
+Add to `~/.claude/settings.json`:
 
 ```json
 {
@@ -36,22 +34,19 @@ Add the statusline to `~/.claude/settings.json`:
 }
 ```
 
-Restart Claude Code. The bar will appear at the bottom of the terminal.
+Restart Claude Code.
 
-## Responsive modes
+## Features
 
-Adapts to terminal width automatically:
+- **Context bar** — gradient progress bar showing context window usage
+- **Model name** — active model displayed in the header
+- **Session duration** — how long the current session has been running
+- **Session cost** — estimated cost based on token counts and [Anthropic pricing](https://docs.anthropic.com/en/about-claude/pricing)
+- **Responsive** — adapts to terminal width (nano / micro / mini / normal)
 
-| Mode | Width | Shows |
-|------|-------|-------|
-| nano | <35 | Model + bar + % |
-| micro | 35-54 | + context size, cost |
-| mini | 55-79 | + duration |
-| normal | 80+ | Full display |
+## Compaction threshold (optional)
 
-## Optional: Compaction threshold
-
-If you want the bar to fill to 100% at a specific context percentage (e.g., when compaction kicks in at 62%), add `contextDisplay` to the **same** `~/.claude/settings.json`:
+If you want the bar to reach 100% at a specific context percentage (e.g., when compaction kicks in at 62%):
 
 ```json
 {
@@ -65,20 +60,7 @@ If you want the bar to fill to 100% at a specific context percentage (e.g., when
 }
 ```
 
-With this set, 62% raw usage displays as a full bar. Omit or set to `100` for raw 0-100%.
-
-## Cost estimates
-
-Session cost is calculated from token counts using hardcoded per-model rates. These rates reflect [Anthropic's pricing](https://docs.anthropic.com/en/about-claude/pricing) as of April 2026. If Anthropic changes their pricing, the estimates will be inaccurate until the rates in `context-bar.sh` are updated. PRs to update pricing are welcome.
-
-## Requirements
-
-- Bash 4+
-- `jq` (JSON parsing)
-- `awk` (cost calculation — available on all UNIX systems)
-- A terminal with truecolor support (most modern terminals)
-
-On macOS, install `jq` with `brew install jq`. On Debian/Ubuntu: `sudo apt install jq`.
+Omit or set to `100` for raw 0–100% display.
 
 ## License
 
