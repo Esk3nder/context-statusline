@@ -155,8 +155,6 @@ render_bar() {
     local width=$1 pct=$2
     local filled=$((pct * width / 100))
     [ "$filled" -lt 0 ] && filled=0
-    local use_spacing=false
-    [ "$width" -le 20 ] && use_spacing=true
 
     local output=""
     for ((i = 1; i <= width; i++)); do
@@ -166,7 +164,7 @@ render_bar() {
         else
             output="${output}${CTX_BUCKET_EMPTY}⛁${RESET}"
         fi
-        [ "$use_spacing" = true ] && output="${output} "
+        [ "$width" -gt 8 ] && output="${output} "
     done
     output="${output% }"
     echo "$output"
@@ -174,25 +172,12 @@ render_bar() {
 
 calc_bar_width() {
     local mode=$1
-    local max_content=$((term_width > 100 ? 100 : term_width))
-    local prefix_len suffix_len bucket_size
-
     case "$mode" in
-        nano|micro) prefix_len=2; suffix_len=5; bucket_size=2 ;;
-        mini)       prefix_len=12; suffix_len=5; bucket_size=2 ;;
-        normal)     prefix_len=12; suffix_len=5; bucket_size=1 ;;
+        nano)   echo 5 ;;
+        micro)  echo 6 ;;
+        mini)   echo 8 ;;
+        normal) echo 16 ;;
     esac
-
-    local buckets=$(( (max_content - prefix_len - suffix_len) / bucket_size ))
-
-    case "$mode" in
-        nano)   [ "$buckets" -lt 5 ] && buckets=5 ;;
-        micro)  [ "$buckets" -lt 6 ] && buckets=6 ;;
-        mini)   [ "$buckets" -lt 8 ] && buckets=8 ;;
-        normal) [ "$buckets" -lt 16 ] && buckets=16 ;;
-    esac
-
-    echo "$buckets"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -234,17 +219,17 @@ case "$MODE" in
         printf "${SLATE_600}──${RESET} ${SLATE_400}${model_name}${RESET}\n"
         ;;
     micro)
-        printf "${SLATE_600}──${RESET} ${SLATE_400}${model_name}${RESET} ${SLATE_600}│${RESET} ${SLATE_500}${max_k}K${RESET}"
+        printf "${SLATE_600}──${RESET} ${SLATE_400}${model_name}${RESET}"
         [ -n "$session_cost" ] && printf " ${SLATE_600}│${RESET} ${SLATE_300}${session_cost}${RESET}"
         printf "\n"
         ;;
     mini)
-        printf "${SLATE_600}──${RESET} ${SLATE_400}${model_name}${RESET} ${SLATE_600}│${RESET} ${SLATE_500}${max_k}K ctx${RESET} ${SLATE_600}│${RESET} ${SLATE_500}${duration}${RESET}"
+        printf "${SLATE_600}──${RESET} ${SLATE_400}${model_name}${RESET} ${SLATE_600}│${RESET} ${SLATE_500}${duration}${RESET}"
         [ -n "$session_cost" ] && printf " ${SLATE_600}│${RESET} ${SLATE_300}${session_cost}${RESET}"
         printf "\n"
         ;;
     normal)
-        printf "${SLATE_600}──${RESET} ${SLATE_400}${model_name}${RESET} ${SLATE_600}│${RESET} ${SLATE_500}${max_k}K context${RESET} ${SLATE_600}│${RESET} ${SLATE_500}${duration}${RESET}"
+        printf "${SLATE_600}──${RESET} ${SLATE_400}${model_name}${RESET} ${SLATE_600}│${RESET} ${SLATE_500}${duration}${RESET}"
         [ -n "$session_cost" ] && printf " ${SLATE_600}│${RESET} ${SLATE_300}${session_cost}${RESET}"
         printf "\n"
         ;;
@@ -253,9 +238,9 @@ esac
 # Context bar
 case "$MODE" in
     nano|micro)
-        printf "${CTX_PRIMARY}◉${RESET} ${bar} ${pct_color}${raw_pct}%%${RESET}\n"
+        printf "${CTX_PRIMARY}◉${RESET} ${bar}  ${pct_color}${raw_pct}%%${RESET}\n"
         ;;
     mini|normal)
-        printf "${CTX_PRIMARY}◉${RESET} ${CTX_SECONDARY}CONTEXT:${RESET} ${bar} ${pct_color}${raw_pct}%%${RESET}\n"
+        printf "${CTX_PRIMARY}◉${RESET} ${CTX_SECONDARY}CONTEXT:${RESET} ${bar}  ${pct_color}${raw_pct}%%${RESET}\n"
         ;;
 esac
