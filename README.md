@@ -2,9 +2,7 @@
 
 A minimal statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that shows real-time context window usage with a gradient progress bar.
 
-<p align="center">
-  <img width="351" height="114" alt="Context statusline screenshot" src="https://github.com/user-attachments/assets/8efdc2dd-d2ec-4ff0-90e3-42a495cc08cd" />
-</p>
+<img width="351" height="114" alt="Context statusline screenshot" src="https://github.com/user-attachments/assets/8efdc2dd-d2ec-4ff0-90e3-42a495cc08cd" />
 
 ```
 ── Claude Opus 4.6 (1M context) │ 12m3s │ $0.847
