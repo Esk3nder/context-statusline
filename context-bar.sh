@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════════════
 # Claude Code Context Bar
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -21,6 +21,15 @@
 set -o pipefail
 
 # ─────────────────────────────────────────────────────────────────────────────
+# DEPENDENCY CHECK
+# ─────────────────────────────────────────────────────────────────────────────
+
+if ! command -v jq >/dev/null 2>&1; then
+    echo "context-bar: jq is required but not installed" >&2
+    exit 1
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PARSE INPUT (Claude Code pipes JSON on stdin)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -28,19 +37,21 @@ input=$(cat)
 
 SETTINGS_FILE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
 
-eval "$(echo "$input" | jq -r '
-  "model_name=" + (.model.display_name // "unknown" | @sh) + "\n" +
-  "context_max=" + (.context_window.context_window_size // 200000 | tostring) + "\n" +
-  "context_pct=" + (.context_window.used_percentage // 0 | tostring) + "\n" +
-  "total_input=" + (.context_window.total_input_tokens // 0 | tostring) + "\n" +
-  "total_output=" + (.context_window.total_output_tokens // 0 | tostring) + "\n" +
-  "duration_ms=" + (.cost.total_duration_ms // 0 | tostring)
-' 2>/dev/null)"
+IFS=$'\t' read -r model_name context_max context_pct total_input total_output duration_ms \
+  < <(echo "$input" | jq -r '[
+    (.model.display_name // "unknown"),
+    (.context_window.context_window_size // 200000 | tostring),
+    (.context_window.used_percentage // 0 | tostring),
+    (.context_window.total_input_tokens // 0 | tostring),
+    (.context_window.total_output_tokens // 0 | tostring),
+    (.cost.total_duration_ms // 0 | tostring)
+  ] | join("\t")' 2>/dev/null)
 
 context_pct=${context_pct:-0}
 context_max=${context_max:-200000}
 total_input=${total_input:-0}
 total_output=${total_output:-0}
+model_name=${model_name:-unknown}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SESSION COST (real-time from token counts)
@@ -48,18 +59,21 @@ total_output=${total_output:-0}
 
 session_cost=""
 if [ "$total_input" -gt 0 ] || [ "$total_output" -gt 0 ]; then
-    case "$model_name" in
-        *"Opus 4"*|*"opus-4"*)   in_rate="15.00"; out_rate="75.00" ;;
-        *"Sonnet 4"*)             in_rate="3.00";  out_rate="15.00" ;;
-        *"Haiku 4"*|*"haiku-4"*) in_rate="0.80";  out_rate="4.00"  ;;
-        *)                        in_rate="3.00";  out_rate="15.00" ;;
+    # Pricing per 1M tokens — update if Anthropic changes rates
+    # https://docs.anthropic.com/en/about-claude/pricing
+    model_lower=$(echo "$model_name" | tr '[:upper:]' '[:lower:]')
+    case "$model_lower" in
+        *opus*4*)   in_rate="5.00";  out_rate="25.00" ;;
+        *sonnet*4*) in_rate="3.00";  out_rate="15.00" ;;
+        *haiku*4*)  in_rate="1.00";  out_rate="5.00"  ;;
+        *)          in_rate="3.00";  out_rate="15.00" ;;
     esac
-    session_cost=$(python3 -c "
-cost = ($total_input * $in_rate + $total_output * $out_rate) / 1_000_000
-if cost < 0.01: print(f'\${cost:.4f}')
-elif cost < 1.00: print(f'\${cost:.3f}')
-else: print(f'\${cost:.2f}')
-" 2>/dev/null)
+    session_cost=$(awk "BEGIN {
+        cost = ($total_input * $in_rate + $total_output * $out_rate) / 1000000
+        if (cost < 0.01) printf \"\$%.4f\", cost
+        else if (cost < 1.00) printf \"\$%.3f\", cost
+        else printf \"\$%.2f\", cost
+    }")
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -145,7 +159,7 @@ render_bar() {
     [ "$width" -le 20 ] && use_spacing=true
 
     local output=""
-    for i in $(seq 1 $width 2>/dev/null); do
+    for ((i = 1; i <= width; i++)); do
         if [ "$i" -le "$filled" ]; then
             local color=$(get_bucket_color $i $width)
             output="${output}${color}⛁${RESET}"
@@ -160,7 +174,7 @@ render_bar() {
 
 calc_bar_width() {
     local mode=$1
-    local content_width=72
+    local max_content=$((term_width > 100 ? 100 : term_width))
     local prefix_len suffix_len bucket_size
 
     case "$mode" in
@@ -169,7 +183,7 @@ calc_bar_width() {
         normal)     prefix_len=12; suffix_len=5; bucket_size=1 ;;
     esac
 
-    local buckets=$(( (content_width - prefix_len - suffix_len) / bucket_size ))
+    local buckets=$(( (max_content - prefix_len - suffix_len) / bucket_size ))
 
     case "$mode" in
         nano)   [ "$buckets" -lt 5 ] && buckets=5 ;;

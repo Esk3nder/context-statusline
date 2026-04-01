@@ -7,7 +7,7 @@ A minimal statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude
 ◉ CONTEXT: ⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁ 37%
 ```
 
-The bar gradient shifts from green → yellow → orange → red as context fills up.
+The bar gradient shifts from green -> yellow -> orange -> red as context fills up.
 
 ## What it shows
 
@@ -24,7 +24,7 @@ curl -o ~/.claude/context-bar.sh https://raw.githubusercontent.com/Esk3nder/cont
 chmod +x ~/.claude/context-bar.sh
 ```
 
-Add to `~/.claude/settings.json`:
+Add the statusline to `~/.claude/settings.json`:
 
 ```json
 {
@@ -35,7 +35,7 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
-Restart Claude Code.
+Restart Claude Code. The bar will appear at the bottom of the terminal.
 
 ## Responsive modes
 
@@ -50,10 +50,14 @@ Adapts to terminal width automatically:
 
 ## Optional: Compaction threshold
 
-If you want the bar to fill to 100% at a specific context percentage (e.g., when compaction kicks in at 62%), add to `~/.claude/settings.json`:
+If you want the bar to fill to 100% at a specific context percentage (e.g., when compaction kicks in at 62%), add `contextDisplay` to the **same** `~/.claude/settings.json`:
 
 ```json
 {
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/context-bar.sh"
+  },
   "contextDisplay": {
     "compactionThreshold": 62
   }
@@ -62,12 +66,18 @@ If you want the bar to fill to 100% at a specific context percentage (e.g., when
 
 With this set, 62% raw usage displays as a full bar. Omit or set to `100` for raw 0-100%.
 
+## Cost estimates
+
+Session cost is calculated from token counts using hardcoded per-model rates. These rates reflect [Anthropic's pricing](https://docs.anthropic.com/en/about-claude/pricing) as of April 2025. If Anthropic changes their pricing, the estimates will be inaccurate until the rates in `context-bar.sh` are updated. PRs to update pricing are welcome.
+
 ## Requirements
 
-- Bash
+- Bash 4+
 - `jq` (JSON parsing)
-- `python3` (cost calculation)
+- `awk` (cost calculation — available on all UNIX systems)
 - A terminal with truecolor support (most modern terminals)
+
+On macOS, install `jq` with `brew install jq`. On Debian/Ubuntu: `sudo apt install jq`.
 
 ## License
 
