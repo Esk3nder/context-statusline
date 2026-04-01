@@ -3,7 +3,7 @@
 A minimal statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that shows real-time context window usage with a gradient progress bar.
 
 ```
-── Claude Opus 4.6 │ 200K context │ 12m3s │ $0.847
+── Claude Opus 4.6 │ 1000K context │ 12m3s │ $0.847
 ◉ CONTEXT: ⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁ 37%
 ```
 
@@ -68,7 +68,7 @@ With this set, 62% raw usage displays as a full bar. Omit or set to `100` for ra
 
 ## Cost estimates
 
-Session cost is calculated from token counts using hardcoded per-model rates. These rates reflect [Anthropic's pricing](https://docs.anthropic.com/en/about-claude/pricing) as of April 2025. If Anthropic changes their pricing, the estimates will be inaccurate until the rates in `context-bar.sh` are updated. PRs to update pricing are welcome.
+Session cost is calculated from token counts using hardcoded per-model rates. These rates reflect [Anthropic's pricing](https://docs.anthropic.com/en/about-claude/pricing) as of April 2026. If Anthropic changes their pricing, the estimates will be inaccurate until the rates in `context-bar.sh` are updated. PRs to update pricing are welcome.
 
 ## Requirements
 
