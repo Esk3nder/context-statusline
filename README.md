@@ -44,7 +44,7 @@ Restart Claude Code.
 
 ## Compaction threshold (optional)
 
-If you want the bar to reach 100% at a specific context percentage (e.g., when compaction kicks in at 62%):
+If you want the bar to reach 100% at a specific context percentage (e.g., if compaction kicks in at 69%):
 
 ```json
 {
