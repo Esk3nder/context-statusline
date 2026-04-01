@@ -4,8 +4,9 @@ A minimal statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude
 
 ```
 ── Claude Opus 4.6 │ 1000K context │ 12m3s │ $0.847
-◉ CONTEXT: ⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁ 37%
+◉ CONTEXT: ⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁⛁ 69%
 ```
+<img width="351" height="114" alt="image" src="https://github.com/user-attachments/assets/8efdc2dd-d2ec-4ff0-90e3-42a495cc08cd" />
 
 The bar gradient shifts from green -> yellow -> orange -> red as context fills up.
 
