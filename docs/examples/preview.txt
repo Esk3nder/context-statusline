@@ -1,9 +1,9 @@
 context-statusline / instrument-panel                                                               Opus · high · 18m42s session
-~/dev/context-statusline    2 CLAUDE.md · 8 rules · 6 MCPs configured · 4 hook events
+~/dev/context-statusline    2 CLAUDE.md · 8 rules · 6 MCPs configured · hooks on 4 events
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-CONTEXT USED                              5H QUOTA USED                             EST. COST
+CONTEXT USED                              5H QUOTA USED                             SESSION COST
 █████████████▊░░░░░░░░░░░░░░░░░░░░░░░     ████████▏░░░░░░░░░░░░░░░░░░░░░░░░░░░░     $0.50
-37% · 126k left                           22% · reset 2h10m                         session estimate
+37% · 126k left                           22% · reset 2h10m                         estimate
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 MAIN    Read context_statusline.py · awaiting result · 3s
 TASKS   2/5  ✓ Inspect the existing renderer · ✓ Research statusline projects

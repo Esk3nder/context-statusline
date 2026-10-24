@@ -20,10 +20,13 @@ from activity import EVENTS, load_state, observe
 from session_snapshot import config_snapshot, task_snapshot
 
 MAX_INPUT = 1024 * 1024
-COLORS = {'muted': (166, 173, 183), 'ink': (229, 231, 235),
-          'current': (244, 245, 247), 'dim': (126, 135, 147), 'rule': (48, 60, 76),
-          'empty': (57, 71, 92), 'good': (74, 222, 128),
-          'warn': (251, 191, 36), 'bad': (251, 113, 133)}
+FOOTER_INSET = 4  # COLUMNS is the whole terminal; Claude's footer spacing takes these cells.
+# All text uses the terminal's own foreground (plain, faint or bold) so it reads on
+# light and dark themes. Fixed colors mark only meters and alert markers; these
+# mid tones keep >= 3:1 against both white and near-black terminals.
+COLORS = {'muted': '2', 'ink': '39', 'current': '39', 'alert': '39', 'dim': '2', 'rule': '2',
+          'empty': '2', 'good': (22, 163, 74), 'warn': (217, 119, 6), 'bad': (220, 38, 38)}
+GRADIENT = [(22, 163, 74), (217, 119, 6), (234, 88, 12), (220, 38, 38)]
 
 
 def obj(value):
@@ -71,11 +74,17 @@ def paint(parts, width, use_color, ascii_mode):
             text = text.encode('ascii', 'replace').decode('ascii')
         text = clip(text, max(0, width - used))
         used += cell_width(text)
-        rgb = COLORS.get(style, style)
-        emphasis = '\033[1m' if style == 'current' else ''
-        result.append(f'{emphasis}\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m{text}\033[0m'
-                      if text and use_color else text)
+        code = COLORS.get(style, style)
+        if isinstance(code, tuple):
+            code = f'38;2;{code[0]};{code[1]};{code[2]}'
+        emphasis = '\033[1m' if style in ('current', 'alert') else ''
+        result.append(f'{emphasis}\033[{code}m{text}\033[0m' if text and use_color else text)
     return ''.join(result)
+
+
+def alert(text, level='warn'):
+    """A colored marker carries the level; the message stays in the terminal foreground."""
+    return [segment(' ! ', level), segment(text, 'alert')]
 
 
 def severity(pct):
@@ -83,7 +92,6 @@ def severity(pct):
 
 
 def meter(pct, count, gradient=False, ascii_mode=False):
-    stops = [(74, 222, 128), (250, 204, 21), (251, 146, 60), (239, 68, 68)]
     parts = []
     for index in range(count):
         fraction = max(0, min(1, (pct or 0) * count / 100 - index))
@@ -94,7 +102,7 @@ def meter(pct, count, gradient=False, ascii_mode=False):
             position = index / max(1, count - 1) * 3
             start = min(2, int(position))
             mix = position - start
-            style = tuple(round(a + (b - a) * mix) for a, b in zip(stops[start], stops[start + 1]))
+            style = tuple(round(a + (b - a) * mix) for a, b in zip(GRADIENT[start], GRADIENT[start + 1]))
         parts.append(segment(glyph, style))
     return parts
 
@@ -197,6 +205,10 @@ def identity(data, width):
         try:
             branch = clean(subprocess.run(['git', '-C', cwd, 'symbolic-ref', '--short', 'HEAD'],
                            capture_output=True, text=True, timeout=.05, check=False).stdout.strip())
+            if branch:  # Name the repository that owns this branch, not the session's start folder.
+                top = subprocess.run(['git', '-C', cwd, 'rev-parse', '--show-toplevel'],
+                                     capture_output=True, text=True, timeout=.05, check=False).stdout.strip()
+                project = clean(Path(top).name) or project
         except (OSError, subprocess.TimeoutExpired):
             pass
     left = project + (f' / {branch}' if branch else '')
@@ -287,7 +299,7 @@ def task_rows(state, snapshot, width):
     if done and work:
         rows += wrap_parts([segment(' ' * min(13, width // 3))] + subjects(work), width, 13)
     if partial:
-        rows += wrap_parts([segment(' ! Task list incomplete · unsupported, unreadable or bounded data', 'warn')], width)
+        rows += wrap_parts(alert('Task list incomplete · unsupported, unreadable or bounded data'), width)
     return rows
 
 
@@ -305,9 +317,10 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
     directory = clean(workspace.get('current_dir') or data.get('cwd'))
     config = obj(snapshot.get('config'))
     meta = [segment(directory, 'muted')] if directory else []
-    if config:
-        summary = (f"{config.get('instructions', 0)} CLAUDE.md · {config.get('rules', 0)} rules · "
-                   f"{config.get('mcps', 0)} MCPs configured · {config.get('hooks', 0)} hook events")
+    counts = [(config.get('instructions'), '{} CLAUDE.md'), (config.get('rules'), '{} rules'),
+              (config.get('mcps'), '{} MCPs configured'), (config.get('hooks'), 'hooks on {} events')]
+    summary = ' · '.join(label.format(count) for count, label in counts if count)
+    if summary:
         meta += [segment(('    ' if meta else '') + summary, 'dim')]
     if meta:
         rows += wrap_parts(meta, width, 2)
@@ -315,7 +328,7 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
     quota_label = f'{label} QUOTA USED' if usage is not None else 'QUOTA'
     instruments = [('CONTEXT USED', pct, pct_text, room, True),
                    (quota_label, usage, quota_text, reset_text, False),
-                   ('EST. COST', None, price, 'session estimate', False)]
+                   ('SESSION COST', None, price, 'estimate', False)]
     count = 3 if width >= 100 else 2 if width >= 60 else 1
     col = width // count
     for index in range(0, 3, count):
@@ -324,9 +337,9 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
             cells = []
             for title, percent, value, detail, gradient in group:
                 parts = ([segment(title, 'muted')] if level == 0 else
-                         [segment(value)] if title == 'EST. COST' and level == 1 else
+                         [segment(value)] if title == 'SESSION COST' and level == 1 else
                          meter(percent, max(1, col - 5), gradient, ascii_mode) if level == 1 else
-                         [segment(detail, 'muted')] if title == 'EST. COST' else
+                         [segment(detail, 'muted')] if title == 'SESSION COST' else
                          [segment(value), segment(' · ' + detail, 'muted')])
                 cells.append(wrap_parts(parts, col))
             for line_index in range(max(map(len, cells))):
@@ -343,11 +356,11 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
     if categories:
         rows += wrap_parts([segment('USED    ', 'dim'), segment(' · '.join(categories), 'muted')], width, 8)
     if config.get('partial'):
-        rows += wrap_parts([segment(' ! Config scan incomplete', 'warn')], width)
+        rows += wrap_parts(alert('Config scan incomplete'), width)
     if pct is not None and pct >= 85:
-        rows += wrap_parts([segment(f' ! CONTEXT PRESSURE · {pct_text} · {room}', 'warn')], width)
+        rows += wrap_parts(alert(f'CONTEXT PRESSURE · {pct_text} · {room}'), width)
     if usage is not None and usage >= 90:
-        rows += wrap_parts([segment(f' ! QUOTA PRESSURE · {label} {quota_text} · {reset_text}', 'warn')], width)
+        rows += wrap_parts(alert(f'QUOTA PRESSURE · {label} {quota_text} · {reset_text}'), width)
     for notice in notices(state, now):
         rows += wrap_parts(notice, width)
     return '\n'.join(paint(row, width, color, ascii_mode) for row in rows) + '\n'
@@ -365,11 +378,11 @@ def notices(state, now):
         request = obj(record.get('request'))
         failure = obj(record.get('failure'))
         if recent(request.get('at'), now):
-            rows.append([segment(' ! Approval requested · ' + clean(request.get('tool')) +
-                                 ' · ' + elapsed(now - request['at']) + ' ago', 'warn')])
+            rows.append(alert('Approval requested · ' + clean(request.get('tool')) +
+                             ' · ' + elapsed(now - request['at']) + ' ago'))
         if recent(failure.get('at'), now):
             kind = 'Permission denied' if failure.get('event') == 'PermissionDenied' else 'Tool failure reported'
-            rows.append([segment(' ! ' + kind + ' · ' + clean(failure.get('tool')), 'bad')])
+            rows.append(alert(kind + ' · ' + clean(failure.get('tool')), 'bad'))
         if len(rows) >= 3:
             break
     compaction = obj(state.get('compaction'))
@@ -402,14 +415,15 @@ def render_subagents(data, width=80, color=True, ascii_mode=False, now=None, sta
         duration = ''
         if start is not None and end is not None and start / 1000 <= end <= now:
             duration = ' · ' + elapsed(end - start / 1000)
-        style = 'bad' if status in ('failed', 'killed') else 'ink' if status == 'running' else 'dim'
-        parts = [segment(role + ' '), segment(status, style), segment(duration, 'muted')]
+        failed = status in ('failed', 'killed')
+        state_parts = alert(status, 'bad') if failed else [segment(status, 'ink' if status == 'running' else 'dim')]
+        parts = [segment(role + (' ' if not failed else ''))] + state_parts + [segment(duration, 'muted')]
         last = number(record.get('last'))
         if status == 'running' and last is not None and 0 <= now - last < 86400:
             request = obj(record.get('request'))
             pending = pending_detail(record, now)
             if recent(request.get('at'), now):
-                parts.append(segment(' · approval requested', 'warn'))
+                parts += [segment(' ·', 'dim')] + alert('approval requested')
             elif pending:
                 parts += [segment(' · ', 'dim')] + pending
             else:
@@ -497,7 +511,8 @@ def main():
     if args.diagnostics:
         print(json.dumps(diagnostics(data, state, now, snapshot), indent=2, allow_nan=False))
     else:
-        width = terminal_width(data.get('columns') if args.subagents else os.environ.get('COLUMNS'))
+        width = (terminal_width(data.get('columns')) if args.subagents else
+                 max(1, terminal_width(os.environ.get('COLUMNS')) - FOOTER_INSET))
         output = (render_subagents(data, width, color, args.ascii, now, state) if args.subagents else
                   render_main(data, width, color, args.ascii, now, state, snapshot))
         sys.stdout.write(output)
