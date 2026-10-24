@@ -1,6 +1,7 @@
 """Codex snapshots never consume Claude state or arbitrary event bodies."""
 import copy
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -98,6 +99,13 @@ class CodexTests(unittest.TestCase):
         self.assertLessEqual(len(text.splitlines()), 64)
         self.assertLessEqual(len(text.encode()), 65536)
         self.assertIn('clipped', text)
+
+    def test_cli_always_emits_utf8_even_when_pipe_encoding_is_ascii(self):
+        result = subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1]/'codex_statusline.py'), '--plain'],
+            input=json.dumps(PAYLOAD).encode(), capture_output=True,
+            env=dict(os.environ, PYTHONIOENCODING='ascii'), timeout=5)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('░', result.stdout.decode('utf-8'))
 
     def test_cli_consumes_versioned_snapshot_without_writing_state(self):
         result = subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1]/'codex_statusline.py'), '--plain'],

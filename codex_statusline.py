@@ -105,6 +105,8 @@ def render_codex(payload, width=80, color=True, now=None):
 
 
 def main():
+    # Codex consumes UTF-8 bytes, including on Windows pipes with a legacy locale.
+    sys.stdout.reconfigure(encoding='utf-8', newline='\n')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--plain', action='store_true')
     args = parser.parse_args()
