@@ -50,7 +50,7 @@ def svg(text, width):
             fill = f'rgb({match[1]},{match[2]},{match[3]})' if match[1] else '#cbd5e1'
             last = match.end()
         fragments.append(f'<tspan fill="{fill}">{escape(line[last:])}</tspan>')
-        elements.append(f'<text x="24" y="{36 + index * 24}">{"".join(fragments)}</text>')
+        elements.append(f'<text x="24" y="{36 + index * 24}" style="white-space:pre">{"".join(fragments)}</text>')
     return '\n'.join(elements + ['</g></svg>']) + '\n'
 
 
