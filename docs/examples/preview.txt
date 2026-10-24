@@ -1,0 +1,10 @@
+MAIN STATUSLINE
+context-statusline / fix/cost                                                            Opus · high
+ CONTEXT USED                     5H QUOTA USED                    EST. COST
+ ██████████▍░░░░░░░░░░░░░░░░░     ██████▏░░░░░░░░░░░░░░░░░░░░░     $0.50
+ 37% · 126k left                  22% · ↻ 2h10m                    session estimate
+
+NATIVE AGENT PANEL
+reviewer running · 8m12s
+  last event 4m0s ago · Bash tool result pending
+researcher completed · 1m40s
