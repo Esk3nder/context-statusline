@@ -10,3 +10,6 @@
 
 # Misc
 *.log
+__pycache__/
+*.pyc
+.test-nonexistent-state/

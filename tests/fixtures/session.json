@@ -1,0 +1,12 @@
+{
+  "session_id": "fixture-session",
+  "version": "2.1.309",
+  "cwd": "/workspace/context-statusline",
+  "workspace": {"current_dir": "/workspace/context-statusline", "project_dir": "/workspace/context-statusline", "repo": {"host": "github.com", "owner": "example", "name": "context-statusline"}},
+  "model": {"id": "claude-opus", "display_name": "Opus"},
+  "effort": {"level": "high"},
+  "fast_mode": false,
+  "context_window": {"context_window_size": 200000, "used_percentage": 37, "remaining_percentage": 63, "total_input_tokens": 370000, "total_output_tokens": 1200},
+  "cost": {"total_cost_usd": 12.34, "total_duration_ms": 723000, "total_api_duration_ms": 100000},
+  "rate_limits": {"five_hour": {"used_percentage": 22, "resets_at": 4102444800}}
+}
