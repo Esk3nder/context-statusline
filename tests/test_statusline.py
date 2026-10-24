@@ -85,6 +85,20 @@ class MainRendererTests(unittest.TestCase):
                 self.assertIn('unavailable', text.lower())
                 self.assertNotIn('nan', text.lower())
 
+    def test_huge_numeric_metric_is_unavailable_without_a_traceback(self):
+        payload = copy.deepcopy(FIXTURE)
+        payload['context_window'] = {'used_percentage': 10 ** 1000}
+        result = invoke(payload)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('unavailable', visible(result.stdout))
+
+    def test_invalid_unicode_session_identifier_does_not_break_the_display(self):
+        payload = copy.deepcopy(FIXTURE)
+        payload['session_id'] = '\ud800'
+        result = invoke(payload)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('$12.34', result.stdout)
+
     def test_custom_model_is_data_not_a_format_string(self):
         payload = copy.deepcopy(FIXTURE)
         payload['model']['display_name'] = 'Test 50% model'

@@ -8,10 +8,14 @@ import json
 import math
 import os
 from pathlib import Path
+import shlex
+import sqlite3
 import subprocess
 import sys
 import time
 import unicodedata
+
+from activity import EVENTS, load_state, observe
 
 MAX_INPUT = 1024 * 1024
 COLORS = {'muted': (148, 163, 184), 'ink': (203, 213, 225),
@@ -26,7 +30,10 @@ def obj(value):
 def number(value, minimum=0, maximum=float('inf')):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    return value if math.isfinite(value) and minimum <= value <= maximum else None
+    try:
+        return value if math.isfinite(value) and minimum <= value <= maximum else None
+    except OverflowError:
+        return None
 
 
 def clean(value):
@@ -162,7 +169,7 @@ def columns(cells, width):
     return result
 
 
-def render_main(data, width=80, color=True, ascii_mode=False, now=None):
+def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=None):
     now = time.time() if now is None else now
     pct, left, cost, (usage, label, reset) = metrics(data, now)
     pct_text = f'{pct:g}%' if pct is not None else 'unavailable'
@@ -194,7 +201,95 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None):
         rows.append([segment(f' ! CONTEXT PRESSURE · {pct_text} · {room}', 'warn')])
     if usage is not None and usage >= 90:
         rows.append([segment(f' ! QUOTA PRESSURE · {label} {quota_text} · {reset_text}', 'warn')])
+    rows.extend(notices(state or {}, now))
     return '\n'.join(paint(row, width, color, ascii_mode) for row in rows) + '\n'
+
+
+def recent(value, now, seconds=60):
+    stamp = number(value)
+    return stamp is not None and 0 <= now - stamp <= seconds
+
+
+def notices(state, now):
+    rows = []
+    for record in obj(state.get('agents')).values():
+        record = obj(record)
+        request = obj(record.get('request'))
+        failure = obj(record.get('failure'))
+        if recent(request.get('at'), now):
+            rows.append([segment(' ! Approval requested · ' + clean(request.get('tool')) +
+                                 ' · ' + elapsed(now - request['at']) + ' ago', 'warn')])
+        if recent(failure.get('at'), now):
+            kind = 'Permission denied' if failure.get('event') == 'PermissionDenied' else 'Tool failure reported'
+            rows.append([segment(' ! ' + kind + ' · ' + clean(failure.get('tool')), 'bad')])
+        if len(rows) >= 3:
+            break
+    compaction = obj(state.get('compaction'))
+    if recent(compaction.get('at'), now):
+        rows.append([segment(' Compacted ' + elapsed(now - compaction['at']) + ' ago', 'muted')])
+    return rows[:3]
+
+
+def render_subagents(data, width=80, color=True, ascii_mode=False, now=None, state=None):
+    """Native batched input -> one JSON line per overridden task row.
+
+    https://code.claude.com/docs/en/statusline#subagent-status-lines
+    """
+    now = time.time() if now is None else now
+    state = state or {}
+    tasks = data.get('tasks')
+    result = []
+    if not isinstance(tasks, list):
+        return ''
+    for task in tasks[:64]:
+        task = obj(task)
+        identifier = task.get('id')
+        if not isinstance(identifier, str) or not identifier or len(identifier) > 256:
+            continue
+        record = obj(obj(state.get('agents')).get(identifier))  # Exact ID only, never a name guess.
+        role = clean(task.get('agentType') or task.get('name') or 'agent')
+        status = clean(task.get('status') or 'unknown')
+        start = number(task.get('startTime'))
+        end = now if status == 'running' else number(record.get('ended'))
+        duration = ''
+        if start is not None and end is not None and start / 1000 <= end <= now:
+            duration = ' · ' + elapsed(end - start / 1000)
+        style = 'bad' if status in ('failed', 'killed') else 'accent' if status == 'running' else 'muted'
+        lines = [[segment(role + ' '), segment(status, style), segment(duration, 'muted')]]
+        last = number(record.get('last'))
+        # Completed task activity is historical; don't give it a live pending-call line.
+        if status == 'running' and last is not None and 0 <= now - last < 86400:
+            detail = '  last event ' + elapsed(now - last) + ' ago'
+            request = obj(record.get('request'))
+            pending = obj(record.get('pending'))
+            if recent(request.get('at'), now):
+                detail += ' · approval requested'
+            elif pending:
+                tool = clean(obj(next(iter(pending.values()))).get('tool') or 'tool')
+                detail += ' · ' + tool + ' tool result pending'
+            lines.append([segment(detail, 'muted')])
+        content = '\n'.join(paint(line, width, color, ascii_mode) for line in lines)
+        result.append(json.dumps({'id': identifier, 'content': content}, ensure_ascii=True))
+    return '\n'.join(result) + ('\n' if result else '')
+
+
+def diagnostics(data, state, now):
+    pct, left, cost, quota = metrics(data, now)
+    return {'context_used_percentage': pct, 'context_tokens_left': left,
+            'quota': {'used_percentage': quota[0], 'window': quota[1], 'resets_at': quota[2]},
+            'estimated_session_cost_usd': cost, 'delegated_cost_inclusion': None,
+            'context_runway': None, 'quota_exhaustion': None,
+            'forecast_reason': 'No validated growth/rate history or compaction threshold',
+            'compaction': state.get('compaction'), 'activity': state.get('agents', {}),
+            'prompt_cache': {key: obj(data.get('prompt_cache')).get(key) for key in ('warm', 'hit_ratio')}}
+
+
+def settings_fragment():
+    command = shlex.quote(str(Path(__file__).resolve().with_name('context-bar.sh')))
+    return {'statusLine': {'type': 'command', 'command': command, 'refreshInterval': 5},
+            'subagentStatusLine': {'type': 'command', 'command': command + ' --subagents'},
+            'hooks': {event: [{'hooks': [{'type': 'command', 'command': command + ' --hook', 'timeout': 1}]}]
+                      for event in EVENTS}}
 
 
 def read_payload():
@@ -209,6 +304,8 @@ def read_payload():
 
 def terminal_width(value):
     try:
+        if isinstance(value, bool):
+            return 80
         width = int(value)
         return width if 1 <= width <= 500 else 80
     except (ValueError, TypeError, OverflowError):
@@ -219,14 +316,36 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--plain', action='store_true', help='disable ANSI colors')
     parser.add_argument('--ascii', action='store_true', help='use ASCII characters')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--subagents', action='store_true', help='format native subagent JSONL rows')
+    modes.add_argument('--hook', action='store_true', help='record observer-only event metadata')
+    modes.add_argument('--diagnostics', action='store_true', help='print measured evidence as JSON')
+    modes.add_argument('--settings', action='store_true', help='print an additive settings fragment; does not edit configuration')
     args = parser.parse_args()
+    if args.settings:
+        print(json.dumps(settings_fragment(), indent=2))
+        return 0
     try:
         data = read_payload()
     except (ValueError, UnicodeError, RecursionError):
-        print('context-statusline: input unavailable', file=sys.stderr)
-        return 1
+        if not args.hook:
+            print('context-statusline: input unavailable', file=sys.stderr)
+        return 0 if args.hook else 1
+    if args.hook:
+        try:
+            observe(data)
+        except (OSError, sqlite3.Error, ValueError, TypeError, AttributeError):
+            pass  # Observers must not affect the agent or permission decisions.
+        return 0
     color = not args.plain and 'NO_COLOR' not in os.environ and os.environ.get('TERM') != 'dumb'
-    sys.stdout.write(render_main(data, terminal_width(os.environ.get('COLUMNS')), color, args.ascii))
+    now = time.time()
+    state = load_state(data.get('session_id'), now)
+    if args.diagnostics:
+        print(json.dumps(diagnostics(data, state, now), indent=2))
+    else:
+        width = terminal_width(data.get('columns') if args.subagents else os.environ.get('COLUMNS'))
+        renderer = render_subagents if args.subagents else render_main
+        sys.stdout.write(renderer(data, width, color, args.ascii, now, state))
     return 0
 
 
