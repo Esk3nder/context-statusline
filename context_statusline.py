@@ -275,13 +275,15 @@ def render_subagents(data, width=80, color=True, ascii_mode=False, now=None, sta
 
 def diagnostics(data, state, now):
     pct, left, cost, quota = metrics(data, now)
+    cache = obj(data.get('prompt_cache'))
     return {'context_used_percentage': pct, 'context_tokens_left': left,
             'quota': {'used_percentage': quota[0], 'window': quota[1], 'resets_at': quota[2]},
             'estimated_session_cost_usd': cost, 'delegated_cost_inclusion': None,
             'context_runway': None, 'quota_exhaustion': None,
             'forecast_reason': 'No validated growth/rate history or compaction threshold',
             'compaction': state.get('compaction'), 'activity': state.get('agents', {}),
-            'prompt_cache': {key: obj(data.get('prompt_cache')).get(key) for key in ('warm', 'hit_ratio')}}
+            'prompt_cache': {'warm': cache.get('warm') if isinstance(cache.get('warm'), bool) else None,
+                             'hit_ratio': number(cache.get('hit_ratio'), maximum=1)}}
 
 
 def settings_fragment():
@@ -341,7 +343,7 @@ def main():
     now = time.time()
     state = load_state(data.get('session_id'), now)
     if args.diagnostics:
-        print(json.dumps(diagnostics(data, state, now), indent=2))
+        print(json.dumps(diagnostics(data, state, now), indent=2, allow_nan=False))
     else:
         width = terminal_width(data.get('columns') if args.subagents else os.environ.get('COLUMNS'))
         renderer = render_subagents if args.subagents else render_main

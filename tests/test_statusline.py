@@ -27,6 +27,26 @@ def visible(s):
 
 
 class MainRendererTests(unittest.TestCase):
+    def test_diagnostics_normalize_invalid_cache_values_to_strict_json(self):
+        # Raw pass-through would either emit non-JSON numbers or invalid cache types.
+        for bad in [float('nan'), float('inf'), -1, 1.01, True, '0.5', {}, 10 ** 1000]:
+            with self.subTest(bad=bad):
+                result = invoke({'prompt_cache': {'warm': bad, 'hit_ratio': bad}},
+                                100, '--diagnostics')
+                self.assertEqual(result.returncode, 0, result.stderr)
+                parsed = json.loads(result.stdout, parse_constant=lambda value: self.fail(
+                    'Diagnostics emitted non-JSON number: ' + value))
+                self.assertEqual(parsed['prompt_cache'], {
+                    'warm': bad if isinstance(bad, bool) else None, 'hit_ratio': None})
+
+    def test_diagnostics_preserve_valid_cache_values(self):
+        for warm, ratio in [(True, 0.75), (False, 0), (True, 1)]:
+            with self.subTest(warm=warm, ratio=ratio):
+                cache = {'warm': warm, 'hit_ratio': ratio}
+                result = invoke({'prompt_cache': cache}, 100, '--diagnostics')
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout)['prompt_cache'], cache)
+
     def test_supplied_cost_is_not_repriced_from_tokens(self):
         result = invoke(FIXTURE)
         self.assertEqual(result.returncode, 0, result.stderr)
