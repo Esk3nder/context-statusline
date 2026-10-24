@@ -70,26 +70,43 @@ def prepare(source, metadata):
     normalize_release_lock(source)
 
 
-def package(binary_dir, output, metadata):
+def upstream_helpers(source):
+    os.environ['CODEX_REPO_ROOT'] = str(source)
+    sys.path.insert(0, str(source/'scripts'))
+    from codex_package.targets import TARGET_SPECS
+    host = next(line.split(': ', 1)[1] for line in subprocess.check_output(
+        ['rustc', '-vV'], cwd=source/'codex-rs', text=True).splitlines() if line.startswith('host: '))
+    return TARGET_SPECS[host]
+
+
+def package(binary_dir, output, metadata, source):
     if output.exists():
         raise ValueError('Output already exists; choose a fresh bundle directory')
-    suffix = '.exe' if os.name == 'nt' else ''
-    binaries = ['codex', 'codex-code-mode-host', 'codex-responses-api-proxy']
-    if sys.platform.startswith('linux'): binaries.append('bwrap')
-    required = [(binary_dir/(name+suffix), name+suffix) for name in binaries]
-    required += [(ROOT/name, name) for name in ['codex_statusline.py','launch_codex.py',
-                  'context_statusline.py','activity.py','session_snapshot.py']]
-    required += [(ROOT/'codex'/'UPSTREAM-LICENSE', 'UPSTREAM-LICENSE'),
-                 (ROOT/'codex'/'UPSTREAM-NOTICE', 'UPSTREAM-NOTICE')]
-    if any(not path.is_file() for path,_ in required):
-        raise ValueError('Missing build output or runtime/license file')
+    spec = upstream_helpers(source)
+    from codex_package.targets import PACKAGE_VARIANTS, PackageInputs
+    from codex_package.layout import build_package_dir
+    from codex_package.ripgrep import resolve_rg_bin
+    suffix = spec.exe_suffix
+    inputs = PackageInputs(
+        entrypoint_bin=binary_dir/('codex'+suffix),
+        code_mode_host_bin=binary_dir/('codex-code-mode-host'+suffix),
+        rg_bin=resolve_rg_bin(spec, None),
+        bwrap_bin=binary_dir/'bwrap' if spec.is_linux else None,
+        codex_command_runner_bin=binary_dir/'codex-command-runner.exe' if spec.is_windows else None,
+        codex_windows_sandbox_setup_bin=binary_dir/'codex-windows-sandbox-setup.exe' if spec.is_windows else None)
     output.mkdir(parents=True)
     try:
-        for path,name in required: shutil.copy2(path, output/name)
+        build_package_dir(output, metadata['bundle_version'], PACKAGE_VARIANTS['codex'], spec, inputs)
+        for name in ['codex_statusline.py','launch_codex.py','context_statusline.py','activity.py','session_snapshot.py']:
+            shutil.copy2(ROOT/name, output/name)
+        for name in ['UPSTREAM-LICENSE','UPSTREAM-NOTICE']:
+            shutil.copy2(ROOT/'codex'/name, output/name)
+        files = sorted(p for p in output.rglob('*') if p.is_file())
         manifest = {'version': metadata['bundle_version'], 'upstream_revision': metadata['revision'],
                     'patch_sha256': metadata['patch_sha256'],
+                    'entrypoint': 'bin/codex'+suffix,
                     'platform': platform.system().lower()+'-'+platform.machine().lower(),
-                    'files': {name:sha(output/name) for _,name in required}}
+                    'files': {p.relative_to(output).as_posix():sha(p) for p in files}}
         (output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     except Exception:
         shutil.rmtree(output)
@@ -109,11 +126,15 @@ def main():
     prepare(source, metadata)
     if args.check: return
     if not args.output: parser.error('--output is required when building')
-    command = ['cargo','build','--locked','--bin','codex','--bin','codex-code-mode-host','--bin','codex-responses-api-proxy']
+    spec = upstream_helpers(source)
+    from codex_package.v8 import resolve_codex_v8_cargo_env
+    build_env = dict(os.environ, **resolve_codex_v8_cargo_env(spec))
+    command = ['cargo','build','--locked','--bin','codex','--bin','codex-code-mode-host']
     if sys.platform.startswith('linux'): command += ['--bin','bwrap']
+    if os.name == 'nt': command += ['--bin','codex-command-runner','--bin','codex-windows-sandbox-setup']
     if args.profile == 'release': command.append('--release')
-    run(command, source/'codex-rs')
-    output = package(source/'codex-rs/target'/('release' if args.profile == 'release' else 'debug'), args.output, metadata)
+    subprocess.run(command, cwd=source/'codex-rs', env=build_env, check=True)
+    output = package(source/'codex-rs/target'/('release' if args.profile == 'release' else 'debug'), args.output, metadata, source)
     print(output)
 
 

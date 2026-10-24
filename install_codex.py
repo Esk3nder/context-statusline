@@ -31,17 +31,23 @@ def verify(bundle):
     if bundle.is_symlink() or (bundle/'manifest.json').is_symlink():
         raise ValueError('Symlinked bundles are refused')
     manifest = json.loads((bundle/'manifest.json').read_text())
+    if not isinstance(manifest, dict):
+        raise ValueError('Invalid bundle manifest')
     version, files = manifest.get('version'), manifest.get('files')
     binary = 'codex.exe' if os.name == 'nt' else 'codex'
     if not isinstance(version, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,100}', version):
         raise ValueError('Invalid bundle version')
-    if not isinstance(files, dict) or not (RUNTIME | {binary}) <= files.keys() or len(files) > 24:
+    entrypoint = manifest.get('entrypoint', binary)
+    if not isinstance(entrypoint, str) or Path(entrypoint).name != binary:
+        raise ValueError('Invalid bundle entrypoint')
+    if not isinstance(files, dict) or not (RUNTIME | {entrypoint}) <= files.keys() or len(files) > 32:
         raise ValueError('Missing bundle runtime files')
     for name, expected in files.items():
-        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,100}', name) or not isinstance(expected, str):
+        parts = name.split('/')
+        if len(parts) > 4 or any(not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,100}', part) for part in parts) or not isinstance(expected, str):
             raise ValueError('Unsafe manifest entry')
         path = bundle/name
-        if path.is_symlink() or not path.is_file() or digest(path) != expected:
+        if any((bundle.joinpath(*parts[:index])).is_symlink() for index in range(1, len(parts)+1)) or not path.is_file() or digest(path) != expected:
             raise ValueError('Bundle verification failed: ' + name)
     return manifest
 
@@ -58,7 +64,7 @@ def paths(prefix):
     if launcher.is_symlink() or (library/'state.json').is_symlink():
         raise ValueError('Symlinked install files are refused')
     state = json.loads((library/'state.json').read_text()) if (library/'state.json').exists() else {}
-    if state and state.get('application') != APP:
+    if not isinstance(state, dict) or (state and state.get('application') != APP):
         raise ValueError('Unrecognized install state')
     if launcher.exists() and digest(launcher) != state.get('launcher_sha256'):
         raise ValueError('Existing launcher is not owned or has been edited; preserving it')
@@ -73,8 +79,8 @@ def activate(library, launcher, version, state):
     command = [sys.executable, str(installed/'launch_codex.py')]
     if os.name == 'nt':
         # cmd forwards CLI arguments; execution of the renderer itself never uses a shell.
-        import subprocess
-        body = '@echo off\r\n' + subprocess.list2cmdline(command) + ' %*\r\n'
+        quoted = ' '.join('\"' + arg.replace('%', '%%') + '\"' for arg in command)
+        body = '@echo off\r\nsetlocal DisableDelayedExpansion\r\n' + quoted + ' %*\r\n'
     else:
         body = '#!/bin/sh\nexec ' + shlex.join(command) + ' "$@"\n'
     old = launcher.read_bytes() if launcher.exists() else None
@@ -113,10 +119,12 @@ def install(bundle, prefix):
             staged = Path(temp)/'bundle'
             staged.mkdir()
             for name in [*manifest['files'], 'manifest.json']:
+                (staged/name).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(bundle/name, staged/name, follow_symlinks=False)
             verify(staged)
             for name in manifest['files']:
-                (staged/name).chmod(0o755 if name.startswith(('codex', 'bwrap')) and not name.endswith('.py') else 0o644)
+                executable = Path(name).name.startswith(('codex', 'bwrap', 'rg')) and not name.endswith(('.py', '.json'))
+                (staged/name).chmod(0o755 if executable else 0o644)
             staged.rename(installed)
     return activate(library, launcher, manifest['version'], state)
 

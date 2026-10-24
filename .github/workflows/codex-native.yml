@@ -40,6 +40,11 @@ jobs:
       - name: Build pinned source and package
         shell: bash
         run: python codex/build.py --source "$RUNNER_TEMP/codex-statusline-source" --output "$RUNNER_TEMP/codex-statusline-bundle"
+      - name: Test the native panel and composer layout
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/codex-statusline-source/codex-rs"
+          env -u NO_COLOR cargo test --release -p codex-tui --lib context_statusline
       - name: Verify the actual bundled launcher
         shell: bash
         run: |

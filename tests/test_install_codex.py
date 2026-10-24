@@ -66,6 +66,18 @@ class InstallCodexTests(unittest.TestCase):
         self.assertFalse((self.prefix/('bin/codex-statusline.cmd' if os.name == 'nt' else 'bin/codex-statusline')).exists())
         self.assertEqual((self.prefix/'bin/codex').read_text(), 'STOCK_CODEX')
 
+    def test_canonical_nested_package_layout_is_verified_and_installed(self):
+        binary = 'codex.exe' if os.name == 'nt' else 'codex'
+        (self.bundle/'bin').mkdir()
+        (self.bundle/binary).rename(self.bundle/'bin'/binary)
+        manifest = json.loads((self.bundle/'manifest.json').read_text())
+        manifest['entrypoint'] = 'bin/' + binary
+        manifest['files']['bin/' + binary] = manifest['files'].pop(binary)
+        (self.bundle/'manifest.json').write_text(json.dumps(manifest))
+        install(self.bundle, self.prefix)
+        installed = self.prefix/'lib/context-statusline/versions/0.164.0-statusline.1'
+        self.assertTrue((installed/'bin'/binary).is_file())
+
     def test_existing_unowned_launcher_is_never_replaced(self):
         (self.prefix/('bin/codex-statusline.cmd' if os.name == 'nt' else 'bin/codex-statusline')).write_text('USER_TOOL')
         with self.assertRaises(ValueError): install(self.bundle, self.prefix)

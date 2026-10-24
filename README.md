@@ -94,7 +94,7 @@ Diagnostics expose normalized metrics, observer evidence, used capability names 
 
 The shared wide design runs **inside our patched Codex CLI**, based on upstream **0.164.0**. No new terminal, pane arrangement or upstream extension approval is needed. Stock Codex's `/statusline` picker still supports only its own built-in fields; it does not provide this renderer bridge. This does not customize the Codex desktop app.
 
-Install a trusted, platform-matching bundle produced by the **Native Codex bundle** workflow, or build one locally. Python **3.10+** must be available on the target computer. Bundles contain the patched Codex binary, its helper binaries, the shared renderer, upstream license/notices and a SHA-256 file manifest. Artifact checksums verify integrity, not the publisher's identity; use a bundle from a build/source you trust.
+Install a trusted, platform-matching bundle produced by the **Native Codex bundle** workflow, or build one locally. Python **3.10+** must be available on the target computer. Bundles contain the patched Codex binary, its canonical helper/ripgrep layout, the shared renderer, upstream license/notices and a SHA-256 file manifest. Artifact checksums verify integrity, not the publisher's identity; use a bundle from a build/source you trust.
 
 ```bash
 python3 install_codex.py /path/to/codex-statusline-bundle
@@ -122,7 +122,7 @@ python3 codex/build.py --source /path/to/fresh-source --output /path/to/new-bund
 
 `codex/upstream.json` pins the upstream commit, feature-patch checksum and resulting source-file checksums. The build verifies/applies only our TUI patch. Upstream release tags retain development workspace versions in Cargo.lock; the script normalizes those workspace version fields without changing dependency revisions. `--check` verifies/prepares source without compiling; `--profile dev` makes a local development bundle. CI builds native macOS ARM64, Linux x86-64 and Windows x86-64 artifacts. Other architectures need separate builds. These are test artifacts, not notarized public macOS releases; signing/notarization and a stable release channel remain distribution work.
 
-Our maintenance is the renderer/adapters plus the bounded TUI patch. For an upstream update: select a new pinned release, apply the patch, review any conflict, run adapter/installer/TUI tests, build each supported platform and publish a new bundle only after validation. A failed upgrade keeps the previous installed version available. Stock Codex updates do not update our independently installed bundle.
+Our maintenance is the renderer/adapters plus the bounded TUI patch. For an upstream update: select a new pinned release, apply the patch, review any conflict, run adapter/installer/TUI tests, build each supported platform and publish a new bundle only after validation. A failed upgrade keeps the previous installed version available. Stock Codex updates do not update our independently installed bundle. The launcher disables the official startup update check for this invocation and directs `codex-statusline update` to our bundle installer.
 
 ## Upgrade and rollback
 
