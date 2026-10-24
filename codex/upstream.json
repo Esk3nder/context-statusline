@@ -2,10 +2,10 @@
   "repository": "https://github.com/openai/codex.git",
   "tag": "rust-v0.164.0",
   "revision": "6aaac694803004a63c6f393d153c96d22521a6b9",
-  "bundle_version": "0.164.0-statusline.2",
+  "bundle_version": "0.164.0-statusline.3",
   "rust": "1.99.1",
   "patch": "native-statusline.patch",
-  "patch_sha256": "36c2a3bcaaf468be971fa07b0f3630827395f1ba78fba7e8c727b447ae8bcfe7",
+  "patch_sha256": "e6d13a16f058562ace84b7980b239ef5a9f79a3c089d789ea58c9a2e33ff1e91",
   "patched_files_sha256": {
     "codex-rs/tui/Cargo.toml": "815f487fa83b89a9b0fc403e60adf8f66ab821f6675343e2091e9e7b054df64e",
     "codex-rs/tui/src/app/app_server_events.rs": "294403051dba8f49ed9c4dfadcd164f8e250bb7f68db470100b6da385929339d",
@@ -18,10 +18,11 @@
     "codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap": "9c83fb45a1a75602de692268050b348f13a3cf89e8624d7e94b08d8c52eb7d9b",
     "codex-rs/tui/src/chatwidget/status_surfaces.rs": "c4b050d65566d6cf18fa1f1bfd4da5c1e9f854a40a128145b9cb2cd7ce002003",
     "codex-rs/tui/src/chatwidget/thread_usage.rs": "28f12617f0abefe9071f55a582b4fda30fde0ce4a3885497699d6cddd17af542",
-    "codex-rs/tui/src/context_statusline.rs": "c61717a15ebf5480acf7268bc19c010eb69a55b4b20b92b2fa940066b652a8b5",
+    "codex-rs/tui/src/context_statusline.rs": "be646226cf0d5bfc4608275c858b6ee8e576af46b0756d913ca446489987c8b6",
     "codex-rs/tui/src/context_statusline/process.rs": "4c6f155724f71b08efedf288054d3c33535966e749c5e16a19928be78b9c3707",
-    "codex-rs/tui/src/context_statusline_tests.rs": "a9fb32303d5dd160df9797f2b205f62a9eebb6dc1f0253c5e7f1145759ca0bbe",
-    "codex-rs/tui/src/lib.rs": "7ec8b9d867ef424f9c41f427168c2b4157d2a017c5b1621fa718a70e2f0028dd",
-    "codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap": "c9093d3b4dd0c3e20bd876769bc5de9368a6f876a97480b8dd972fd41b1ce115"
+    "codex-rs/tui/src/context_statusline_tests.rs": "57b4cb4d085a18189555e2c50702f98e8eee51f7afac5ae6566915c753c37ec9",
+    "codex-rs/tui/src/lib.rs": "4959031a21a7da4f995b7f7fd26a56aaa50c42cc1a96d393027b3bccf3795144",
+    "codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap": "c9093d3b4dd0c3e20bd876769bc5de9368a6f876a97480b8dd972fd41b1ce115",
+    "codex-rs/tui/src/startup_orchestration.rs": "f3a659d245e9e0e3219a58edbe8b300cce28bacc5919671d5f5054a6a006db59"
   }
 }

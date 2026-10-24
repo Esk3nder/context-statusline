@@ -275,10 +275,10 @@ index 9907aa1c6..6515cdb06 100644
      requested: bool,
 diff --git a/codex-rs/tui/src/context_statusline.rs b/codex-rs/tui/src/context_statusline.rs
 new file mode 100644
-index 000000000..389b3159a
+index 000000000..ca1987b79
 --- /dev/null
 +++ b/codex-rs/tui/src/context_statusline.rs
-@@ -0,0 +1,413 @@
+@@ -0,0 +1,472 @@
 +//! Opt-in external status panel. Model behavior, persistence and native config stay unchanged.
 +use crate::render::renderable::Renderable;
 +use crate::tui::FrameRequester;
@@ -301,6 +301,65 @@ index 000000000..389b3159a
 +use tokio::io::AsyncWriteExt;
 +
 +mod process;
++
++pub(crate) const BACKEND_SOCKET: &str = "CODEX_STATUSLINE_BACKEND_SOCKET";
++
++pub(crate) fn local_backend_from_env() -> std::io::Result<Option<crate::AppServerTarget>> {
++    let Some(path) = std::env::var_os(BACKEND_SOCKET) else {
++        return Ok(None);
++    };
++    #[cfg(unix)]
++    return local_backend_at(std::path::Path::new(&path)).map(Some);
++    #[cfg(not(unix))]
++    {
++        let _ = path;
++        Err(std::io::Error::other(
++            "private statusline backend requires a Unix socket",
++        ))
++    }
++}
++
++#[cfg(unix)]
++fn local_backend_at(path: &std::path::Path) -> std::io::Result<crate::AppServerTarget> {
++    use std::os::unix::fs::FileTypeExt;
++    use std::os::unix::fs::MetadataExt;
++    let parent = path
++        .parent()
++        .ok_or_else(|| std::io::Error::other("missing socket directory"))?;
++    let directory = std::fs::symlink_metadata(parent)?;
++    let advertised = std::fs::symlink_metadata(path)?;
++    let uid = unsafe { libc::geteuid() };
++    if !path.is_absolute()
++        || !directory.is_dir()
++        || directory.uid() != uid
++        || directory.mode() & 0o077 != 0
++        || advertised.uid() != uid
++    {
++        return Err(std::io::Error::other(
++            "statusline backend socket must be owned and private",
++        ));
++    }
++    // Official Codex advertises an alias to a deterministic endpoint in its
++    // protected executor-local directory. Reuse upstream's validation so an
++    // arbitrary symlink cannot redirect this local, credential-bearing client.
++    let endpoint = if advertised.file_type().is_symlink() {
++        codex_app_server_client::verified_local_daemon_socket(path)?
++            .ok_or_else(|| std::io::Error::other("unverified statusline backend alias"))?
++    } else {
++        codex_utils_absolute_path::AbsolutePathBuf::from_absolute_path(path)?
++    };
++    let socket = std::fs::symlink_metadata(endpoint.as_path())?;
++    if !socket.file_type().is_socket() || socket.uid() != uid {
++        return Err(std::io::Error::other("invalid statusline backend socket"));
++    }
++    Ok(crate::AppServerTarget::LocalDaemon {
++        endpoint: codex_app_server_client::RemoteAppServerEndpoint::UnixSocket {
++            socket_path: endpoint,
++        },
++        // Never read credentials in the patched embedded process after a backend failure.
++        allow_embedded_fallback: false,
++    })
++}
 +
 +const INTERVAL: Duration = Duration::from_millis(500);
 +const MAX_OUTPUT: u64 = 65536;
@@ -737,10 +796,10 @@ index 000000000..e85f3b5d9
 +}
 diff --git a/codex-rs/tui/src/context_statusline_tests.rs b/codex-rs/tui/src/context_statusline_tests.rs
 new file mode 100644
-index 000000000..f7c048dca
+index 000000000..98ef3cbf4
 --- /dev/null
 +++ b/codex-rs/tui/src/context_statusline_tests.rs
-@@ -0,0 +1,231 @@
+@@ -0,0 +1,298 @@
 +use super::*;
 +use pretty_assertions::assert_eq;
 +use ratatui::buffer::Buffer;
@@ -972,8 +1031,75 @@ index 000000000..f7c048dca
 +        assert!(!text.chars().any(|c| c.is_control() || c == '\u{202e}'));
 +    }
 +}
++
++#[cfg(unix)]
++#[test]
++fn private_backend_is_local_and_cannot_fall_back_to_embedded_credentials() {
++    use std::os::unix::fs::PermissionsExt;
++    let dir = tempdir().unwrap();
++    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
++    let path = dir.path().join("app-server.sock");
++    let _listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
++    let target = local_backend_at(&path).unwrap();
++    assert!(matches!(
++        target,
++        crate::AppServerTarget::LocalDaemon {
++            allow_embedded_fallback: false,
++            ..
++        }
++    ));
++    assert!(!target.uses_remote_workspace());
++    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o755)).unwrap();
++    assert!(local_backend_at(&path).is_err());
++}
++
++#[cfg(unix)]
++#[test]
++fn private_backend_refuses_missing_regular_or_symlinked_sockets() {
++    use std::os::unix::fs::PermissionsExt;
++    let dir = tempdir().unwrap();
++    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
++    let path = dir.path().join("app-server.sock");
++    assert!(local_backend_at(&path).is_err());
++    std::fs::write(&path, "not a socket").unwrap();
++    assert!(local_backend_at(&path).is_err());
++    std::fs::remove_file(&path).unwrap();
++    let real = dir.path().join("real.sock");
++    let _listener = std::os::unix::net::UnixListener::bind(&real).unwrap();
++    std::os::unix::fs::symlink(&real, &path).unwrap();
++    assert!(local_backend_at(&path).is_err());
++}
++
++#[cfg(unix)]
++#[test]
++fn private_backend_accepts_only_the_verified_upstream_socket_alias() {
++    use sha2::Digest;
++    use std::os::unix::ffi::OsStrExt;
++    use std::os::unix::fs::PermissionsExt;
++    let dir = tempdir().unwrap();
++    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
++    let path = dir.path().join("app-server.sock");
++    let canonical = std::fs::canonicalize(dir.path())
++        .unwrap()
++        .join("app-server.sock");
++    let hash = sha2::Sha256::digest(canonical.as_os_str().as_bytes());
++    let real = codex_uds::prepare_shared_daemon_socket_directory()
++        .unwrap()
++        .join(format!("{hash:x}"));
++    let listener = std::os::unix::net::UnixListener::bind(&real).unwrap();
++    std::os::unix::fs::symlink(&real, &path).unwrap();
++    let result = local_backend_at(&path);
++    drop(listener);
++    std::fs::remove_file(&real).unwrap();
++    let target = result.unwrap();
++    assert!(matches!(target, crate::AppServerTarget::LocalDaemon {
++        endpoint: codex_app_server_client::RemoteAppServerEndpoint::UnixSocket { socket_path },
++        allow_embedded_fallback: false,
++    } if socket_path.as_path() == real));
++    assert!(local_backend_at(&path).is_err());
++}
 diff --git a/codex-rs/tui/src/lib.rs b/codex-rs/tui/src/lib.rs
-index 147ff230b..90bddceef 100644
+index 147ff230b..ce357b4d3 100644
 --- a/codex-rs/tui/src/lib.rs
 +++ b/codex-rs/tui/src/lib.rs
 @@ -178,6 +178,7 @@ pub(crate) mod live_wrap;
@@ -984,6 +1110,18 @@ index 147ff230b..90bddceef 100644
  mod local_chatgpt_auth;
  mod managed_new_thread_defaults;
  mod markdown;
+@@ -1068,6 +1069,11 @@ fn app_server_target_for_launch(
+     workload_identity_selected: bool,
+     exec_server_url: Option<&std::ffi::OsStr>,
+ ) -> std::io::Result<AppServerTarget> {
++    if explicit_remote_endpoint.is_none()
++        && let Some(target) = context_statusline::local_backend_from_env()?
++    {
++        return Ok(target);
++    }
+     if workload_identity_selected {
+         if explicit_remote_endpoint.is_some() {
+             return Err(std::io::Error::new(
 diff --git a/codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap b/codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap
 new file mode 100644
 index 000000000..91491d7c6
@@ -995,3 +1133,29 @@ index 000000000..91491d7c6
 +expression: "buf.content.iter().map(|cell| cell.symbol()).collect::<String>()"
 +---
 +CONTEXT USED     5H QUOTA USED              ████░░          █░░░░░                      37%              22%
+diff --git a/codex-rs/tui/src/startup_orchestration.rs b/codex-rs/tui/src/startup_orchestration.rs
+index d3fde7278..8d5a29992 100644
+--- a/codex-rs/tui/src/startup_orchestration.rs
++++ b/codex-rs/tui/src/startup_orchestration.rs
+@@ -545,7 +545,8 @@ pub(super) async fn run_main_inner(
+     } else {
+         None
+     };
+-    let auto_start_daemon = config.features.enabled(Feature::DaemonAutoStart)
++    let auto_start_daemon = std::env::var_os(context_statusline::BACKEND_SOCKET).is_none()
++        && config.features.enabled(Feature::DaemonAutoStart)
+         && implicit_connection
+         && !cli.agents_overview
+         && !cli.no_daemon
+@@ -630,6 +631,11 @@ pub(super) async fn run_main_inner(
+         .await?
+     };
+     if compatibility_warning.is_some() {
++        if std::env::var_os(context_statusline::BACKEND_SOCKET).is_some() {
++            return Err(std::io::Error::other(
++                "signed statusline backend settings are incompatible; embedded fallback is disabled",
++            ));
++        }
+         app_server_target = AppServerTarget::Embedded;
+         daemon_exclusion = Some("daemon feature settings");
+     }
