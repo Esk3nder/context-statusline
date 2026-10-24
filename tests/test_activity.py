@@ -38,6 +38,49 @@ class ActivityTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return [json.loads(row) for row in result.stdout.splitlines()]
 
+    def cached_state(self):
+        with sqlite3.connect(self.state / 'activity.sqlite3') as db:
+            return json.loads(db.execute('SELECT body FROM sessions').fetchone()[0])
+
+    def test_file_targets_keep_only_sanitized_basename(self):
+        self.hook('PreToolUse', agent='@main', tool_name='Read', tool_use_id='read-1',
+                  tool_input={'file_path': '/SECRET_PARENT/test\u202e_file.py', 'other': 'SECRET_PAYLOAD'})
+        state = self.cached_state()
+        call = next(iter(state['agents']['@main']['pending'].values()))
+        self.assertEqual(call['target'], 'test _file.py')
+        self.assertNotIn('SECRET', json.dumps(state))
+
+    def test_successful_skill_and_mcp_calls_are_recorded_once(self):
+        for _ in range(2):
+            self.hook('PostToolUse', agent='@main', tool_name='Skill',
+                      tool_input={'skill': 'brainstorming', 'args': 'SECRET_ARGS'}, tool_response='SECRET_RESULT')
+        self.hook('PostToolUse', tool_name='mcp__context7__query_docs')
+        self.hook('PostToolUseFailure', tool_name='mcp__failed_server__call')
+        self.hook('PostToolUseFailure', tool_name='Skill', tool_input={'skill': 'failed-skill'})
+        used = self.cached_state()['used']
+        self.assertEqual(used, {'skills': ['brainstorming'], 'mcps': ['context7']})
+        self.assertNotIn('SECRET', json.dumps(self.cached_state()))
+
+    def test_legacy_todos_change_only_after_confirmed_success_and_stay_agent_scoped(self):
+        todos = [{'content': 'Build the panel', 'status': 'in_progress', 'activeForm': 'SECRET_DETAIL'}]
+        self.hook('PreToolUse', agent='@main', tool_name='TodoWrite', tool_use_id='todo-1', tool_input={'todos': todos})
+        self.assertNotIn('todos', self.cached_state()['agents']['@main'])
+        self.hook('PostToolUse', agent='@main', tool_name='TodoWrite', tool_use_id='todo-1', tool_input={'todos': todos})
+        self.hook('PostToolUseFailure', agent='@main', tool_name='TodoWrite', tool_input={'todos': []})
+        self.hook('PostToolUse', tool_name='TodoWrite', tool_input={'todos': [{'content': 'Child task', 'status': 'pending'}]})
+        state = self.cached_state()
+        self.assertEqual(state['agents']['@main']['todos'], [{'subject': 'Build the panel', 'status': 'in_progress'}])
+        self.assertEqual(state['agents']['agent-review']['todos'][0]['subject'], 'Child task')
+        self.assertNotIn('SECRET', json.dumps(state))
+        self.hook('PostToolUse', agent='@main', tool_name='TodoWrite', tool_input={'todos': []})
+        self.assertEqual(self.cached_state()['agents']['@main']['todos'], [])
+
+    def test_stopping_agent_clears_target_and_pending_calls(self):
+        self.hook('PreToolUse', tool_name='Edit', tool_use_id='call-1', tool_input={'file_path': '/tmp/test.py'})
+        self.assertIn('target', next(iter(self.cached_state()['agents']['agent-review']['pending'].values())))
+        self.hook('SubagentStop')
+        self.assertEqual(self.cached_state()['agents']['agent-review']['pending'], {})
+
     def test_native_jsonl_preserves_ids_and_reported_states(self):
         rows = self.rows()
         self.assertEqual([x['id'] for x in rows], ['agent-review', 'agent-research'])

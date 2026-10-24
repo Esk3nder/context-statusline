@@ -1,4 +1,4 @@
-"""Private, bounded observer metadata. Never reads transcripts or tool content.
+"""Private, bounded observer metadata. Never reads transcripts or retains raw payloads.
 
 Events: https://code.claude.com/docs/en/hooks#common-input-fields
 """
@@ -10,6 +10,8 @@ import sqlite3
 import stat
 import time
 from urllib.parse import quote
+
+from session_snapshot import metadata
 
 TTL = 86400
 EVENTS = ('SubagentStart', 'SubagentStop', 'PreToolUse', 'PostToolUse',
@@ -53,7 +55,7 @@ def database(create=False):
     if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077 or info.st_uid != os.getuid():
         raise OSError('unsafe state file')
     uri = 'file:' + quote(str(path.absolute()), safe='/') + ('?mode=rw' if create else '?mode=ro')
-    connection = sqlite3.connect(uri, uri=True, timeout=.05)
+    connection = sqlite3.connect(uri, uri=True, timeout=.2)
     if create:
         connection.execute('CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, updated_at REAL NOT NULL, body TEXT NOT NULL)')
     return connection
@@ -80,7 +82,7 @@ def load_state(session_id, now=None):
 
 
 def observe(data, now=None):
-    """Fail-open observer: no stdout, permission decisions or content retention."""
+    """Fail-open observer; retain only allowlisted labels, IDs and timestamps."""
     now = time.time() if now is None else now
     event, identifier = data.get('hook_event_name'), key(data.get('session_id'))
     if event not in EVENTS or identifier is None:
@@ -100,16 +102,18 @@ def observe(data, now=None):
             state = {}
         if not isinstance(state, dict):
             state = {}
-        state['version'] = 1
+        state['version'] = 2
         agents = state.setdefault('agents', {})
         agent_id = data.get('agent_id') or '@main'
         if not isinstance(agent_id, str) or len(agent_id) > 256:
             agent_id = '@main'
         record = agents.setdefault(agent_id, {})
         record.update(last=now, event=event)
-        # Tool names are metadata; tool_input/response, errors and summaries are never retained.
+        # Only selected labels below cross the input boundary; never retain raw payloads.
         tool = data.get('tool_name')
-        tool = tool[:64] if isinstance(tool, str) else 'tool'
+        tool = metadata(tool, 64) or 'tool'
+        details = data.get('tool_input')
+        details = details if isinstance(details, dict) else {}
         pending = record.setdefault('pending', {})
         call = key(data.get('tool_use_id'))
         if event == 'SubagentStart':
@@ -121,6 +125,13 @@ def observe(data, now=None):
             record.pop('ended', None)
             if call:
                 pending[call] = {'tool': tool, 'at': now}
+                field = {'Read': 'file_path', 'Write': 'file_path', 'Edit': 'file_path',
+                         'MultiEdit': 'file_path', 'NotebookEdit': 'notebook_path'}.get(tool)
+                target = details.get(field) if field else None
+                if isinstance(target, str) and len(target) <= 4096:
+                    target = metadata(target.replace('\\', '/').rsplit('/', 1)[-1], 96)
+                    if target:
+                        pending[call]['target'] = target
             while len(pending) > 16:
                 del pending[next(iter(pending))]
         elif event in ('PostToolUse', 'PostToolUseFailure', 'PermissionDenied'):
@@ -129,6 +140,29 @@ def observe(data, now=None):
                 record.pop('request', None)
             if event != 'PostToolUse':
                 record['failure'] = {'at': now, 'tool': tool, 'event': event}
+            else:
+                used = state.setdefault('used', {'skills': [], 'mcps': []})
+                skill = metadata(details.get('skill'), 128) if tool == 'Skill' else ''
+                server = metadata(tool.split('__', 2)[1], 64) if tool.startswith('mcp__') and tool.count('__') >= 2 else ''
+                for category, name in [('skills', skill), ('mcps', server)]:
+                    if name and name not in used[category]:
+                        used[category].append(name)
+                        used[category] = used[category][-32:]
+                if tool == 'TodoWrite' and isinstance(details.get('todos'), list):
+                    todos = details['todos']
+                    record['todos'] = []
+                    record['todos_partial'] = len(todos) > 256
+                    for todo in todos[:256]:
+                        if not isinstance(todo, dict):
+                            record['todos_partial'] = True
+                            continue
+                        subject = metadata(todo.get('content'))
+                        status_value = todo.get('status')
+                        if subject and status_value in ('pending', 'in_progress', 'completed'):
+                            record['todos'].append({'subject': subject, 'status': status_value})
+                            record['todos_partial'] |= len(todo['content']) > 512
+                        else:
+                            record['todos_partial'] = True
         elif event == 'PermissionRequest':
             record['request'] = {'at': now, 'tool': tool}
         elif event == 'PostCompact':
