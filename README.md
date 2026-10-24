@@ -108,11 +108,13 @@ python3 install_codex.py --rollback
 python3 install_codex.py --uninstall
 ```
 
+The installer checks the bundle OS/CPU, canonical package metadata, required platform helpers and every file checksum before activation.
+
 Rollback activates the preceding verified bundle. Uninstall removes the owned launcher and retains bundles for recovery; it never removes stock Codex. A custom `--prefix` works with all three installer operations.
 
 Native context uses the latest active context count, not cumulative session tokens. Quota labels reflect the actual window duration. The plan/checklist comes from native plan updates. Main/known-child tool calls are correlated by thread and item IDs; no shell commands, arguments, results or agent messages go to the renderer. Subagent states are the latest supplied native observations, not inferred progress. Supplied costs are **direct-thread estimates**; elapsed time is explicitly **since attachment**. Missing cost/config data stays unavailable or is omitted. Only known configured MCP counts are currently supplied; instruction/rule/hook/skill counts are omitted when unavailable. Codex never reads Claude task files, configuration or observer state.
 
-The TUI patch is opt-in through `CODEX_STATUSLINE_COMMAND`, a JSON array of executable/argv entries set by the launcher. It uses no shell expansion. At most one renderer runs per widget, at most twice per second, with a 500ms timeout and 64 KiB output cap. Output is converted into styled cells with terminal control sequences removed. A 64-row display bound is disclosed when clipping. Renderer errors leave native Codex usable; dialogs and input take layout priority. We do not alter the backend, model context, permissions, approval behavior or agent tools.
+The TUI patch is opt-in through `CODEX_STATUSLINE_COMMAND`, a JSON array of executable/argv entries set by the launcher. It uses no shell expansion. At most one renderer runs per widget, at most twice per second, with a 500ms timeout, 1 MiB input cap and 64 KiB output cap. Native text labels are limited to 512 characters before crossing the process boundary. Unix process groups and Windows Job Objects clean up renderer descendants on timeout, error and normal exit. Output is converted into styled cells with terminal control sequences removed. A 64-row display bound is disclosed when clipping. Renderer errors leave native Codex usable; dialogs and input take layout priority. We do not alter the backend, model context, permissions, approval behavior or agent tools.
 
 To reproduce a source build, install the pinned Rust 1.99.1 toolchain and native build dependencies, then:
 

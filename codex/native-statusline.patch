@@ -1,3 +1,27 @@
+diff --git a/codex-rs/Cargo.lock b/codex-rs/Cargo.lock
+index 1eb38f328..0c70f64d2 100644
+--- a/codex-rs/Cargo.lock
++++ b/codex-rs/Cargo.lock
+@@ -4969,6 +4969,7 @@ dependencies = [
+  "codex-utils-oss",
+  "codex-utils-path",
+  "codex-utils-path-uri",
++ "codex-utils-pty",
+  "codex-utils-plugins",
+  "codex-utils-sandbox-summary",
+  "codex-utils-sleep-inhibitor",
+diff --git a/codex-rs/tui/Cargo.toml b/codex-rs/tui/Cargo.toml
+index 47968b869..928f4e2ed 100644
+--- a/codex-rs/tui/Cargo.toml
++++ b/codex-rs/tui/Cargo.toml
+@@ -74,6 +74,7 @@ codex-utils-home-dir = { workspace = true }
+ codex-utils-oss = { workspace = true }
+ codex-utils-path = { workspace = true }
+ codex-utils-path-uri = { workspace = true }
++codex-utils-pty = { workspace = true }
+ codex-utils-plugins = { workspace = true }
+ codex-utils-sandbox-summary = { workspace = true }
+ codex-utils-sleep-inhibitor = { workspace = true }
 diff --git a/codex-rs/tui/src/app/app_server_events.rs b/codex-rs/tui/src/app/app_server_events.rs
 index cd8f1678d..4ae3d6564 100644
 --- a/codex-rs/tui/src/app/app_server_events.rs
@@ -44,12 +68,13 @@ index 8d4bbbd18..fb82527e3 100644
                  app_event_tx,
 diff --git a/codex-rs/tui/src/chatwidget/context_statusline.rs b/codex-rs/tui/src/chatwidget/context_statusline.rs
 new file mode 100644
-index 000000000..f9615edf3
+index 000000000..648b8d85e
 --- /dev/null
 +++ b/codex-rs/tui/src/chatwidget/context_statusline.rs
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,44 @@
 +//! Snapshot only allowlisted native fields for the optional external panel.
 +use super::*;
++use crate::context_statusline::label;
 +use serde_json::json;
 +
 +impl ChatWidget {
@@ -75,14 +100,14 @@ index 000000000..f9615edf3
 +            });
 +        panel.update(json!({
 +            "schema_version": 1, "host":"codex", "session_id":self.thread_id,
-+            "model":self.current_model(), "effort":self.current_reasoning_effort(),
-+            "cwd":self.config.cwd, "branch":self.status_line_branch,
++            "model":label(self.current_model()), "effort":self.current_reasoning_effort(),
++            "cwd":label(&self.config.cwd.to_string_lossy()), "branch":self.status_line_branch.as_deref().map(label),
 +            "context":context,
 +            "estimated_thread_cost_usd": self.thread_usage.estimate.as_ref().and_then(|usage|
 +                usage.estimated_usage_usd_micros.map(|cost| cost as f64 / 1_000_000.0)),
 +            "configuration":{"mcps": self.config.mcp_servers.get().len()},
 +            "agent_roles": self.collab_agent_metadata.iter().take(64).map(|(id, meta)|
-+                (id.to_string(), meta.agent_role.as_deref().or(meta.agent_nickname.as_deref()).unwrap_or("agent"))
++                (id.to_string(), label(meta.agent_role.as_deref().or(meta.agent_nickname.as_deref()).unwrap_or("agent")))
 +            ).collect::<std::collections::BTreeMap<_,_>>()
 +        }));
 +    }
@@ -250,10 +275,10 @@ index 9907aa1c6..6515cdb06 100644
      requested: bool,
 diff --git a/codex-rs/tui/src/context_statusline.rs b/codex-rs/tui/src/context_statusline.rs
 new file mode 100644
-index 000000000..b5c43604e
+index 000000000..389b3159a
 --- /dev/null
 +++ b/codex-rs/tui/src/context_statusline.rs
-@@ -0,0 +1,392 @@
+@@ -0,0 +1,413 @@
 +//! Opt-in external status panel. Model behavior, persistence and native config stay unchanged.
 +use crate::render::renderable::Renderable;
 +use crate::tui::FrameRequester;
@@ -274,6 +299,8 @@ index 000000000..b5c43604e
 +use std::time::Instant;
 +use tokio::io::AsyncReadExt;
 +use tokio::io::AsyncWriteExt;
++
++mod process;
 +
 +const INTERVAL: Duration = Duration::from_millis(500);
 +const MAX_OUTPUT: u64 = 65536;
@@ -326,6 +353,20 @@ index 000000000..b5c43604e
 +    }
 +
 +    pub(crate) fn update(&self, mut payload: Value) {
++        for key in ["session_id", "model", "cwd", "branch"] {
++            if let Some(value) = payload[key].as_str() {
++                payload[key] = json!(label(value));
++            }
++        }
++        if let Some(roles) = payload["agent_roles"].as_object() {
++            payload["agent_roles"] = json!(
++                roles
++                    .iter()
++                    .take(64)
++                    .map(|(id, role)| (label(id), label(role.as_str().unwrap_or("agent"))))
++                    .collect::<BTreeMap<_, _>>()
++            );
++        }
 +        let mut inner = self
 +            .inner
 +            .lock()
@@ -443,6 +484,9 @@ index 000000000..b5c43604e
 +                })
 +                .collect::<Vec<_>>()
 +        );
++        if let Some(object) = payload.as_object_mut() {
++            object.remove("agent_roles");
++        }
 +        payload["used"] = json!({"mcps":inner.used_mcps});
 +        payload["limits"] = json!(inner.limits);
 +        payload["partial"] = json!(inner.partial);
@@ -469,10 +513,10 @@ index 000000000..b5c43604e
 +    }
 +}
 +
-+fn label(value: &str) -> String {
++pub(crate) fn label(value: &str) -> String {
 +    value
 +        .chars()
-+        .filter(|c| !c.is_control())
++        .filter(|c| !c.is_control() && !matches!(*c, '\u{061c}' | '\u{200e}' | '\u{200f}' | '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}'))
 +        .take(512)
 +        .collect()
 +}
@@ -554,16 +598,18 @@ index 000000000..b5c43604e
 +}
 +
 +async fn run_renderer(command: &[String], payload: Value) -> Result<Vec<Line<'static>>, ()> {
++    let raw = serde_json::to_vec(&payload).map_err(|_| ())?;
++    if raw.len() > 1_048_576 {
++        return Err(());
++    }
 +    let work = async {
-+        let mut child = tokio::process::Command::new(command.first().ok_or(())?)
++        let mut command_builder = tokio::process::Command::new(command.first().ok_or(())?);
++        command_builder
 +            .args(&command[1..])
 +            .stdin(Stdio::piped())
 +            .stdout(Stdio::piped())
-+            .stderr(Stdio::null())
-+            .kill_on_drop(true)
-+            .spawn()
-+            .map_err(|_| ())?;
-+        let raw = serde_json::to_vec(&payload).map_err(|_| ())?;
++            .stderr(Stdio::null());
++        let (mut child, _tree) = process::spawn(&mut command_builder).map_err(|_| ())?;
 +        let mut stdin = child.stdin.take().ok_or(())?;
 +        let mut stdout = child.stdout.take().ok_or(())?.take(MAX_OUTPUT + 1);
 +        let writer = async {
@@ -646,12 +692,55 @@ index 000000000..b5c43604e
 +#[cfg(test)]
 +#[path = "context_statusline_tests.rs"]
 +mod tests;
+diff --git a/codex-rs/tui/src/context_statusline/process.rs b/codex-rs/tui/src/context_statusline/process.rs
+new file mode 100644
+index 000000000..e85f3b5d9
+--- /dev/null
++++ b/codex-rs/tui/src/context_statusline/process.rs
+@@ -0,0 +1,37 @@
++//! Own the renderer tree on every exit, including cancellation and successful rendering.
++use std::io;
++use tokio::process::Child;
++use tokio::process::Command;
++
++pub(super) struct Tree {
++    #[cfg(unix)]
++    pid: u32,
++    #[cfg(windows)]
++    _job: codex_utils_pty::JobObject,
++}
++
++#[cfg(unix)]
++impl Drop for Tree {
++    fn drop(&mut self) {
++        let _ = codex_utils_pty::process_group::kill_process_group(self.pid);
++    }
++}
++
++pub(super) fn spawn(command: &mut Command) -> io::Result<(Child, Tree)> {
++    command.kill_on_drop(true);
++    #[cfg(unix)]
++    {
++        let child = command.process_group(0).spawn()?;
++        let pid = child
++            .id()
++            .ok_or_else(|| io::Error::other("missing renderer PID"))?;
++        Ok((child, Tree { pid }))
++    }
++    #[cfg(windows)]
++    {
++        // Fail closed: assignment happens while suspended, before any descendants can spawn.
++        let job = codex_utils_pty::JobObject::create_without_breakaway()?;
++        let child = job.spawn_contained(command)?;
++        Ok((child, Tree { _job: job }))
++    }
++}
 diff --git a/codex-rs/tui/src/context_statusline_tests.rs b/codex-rs/tui/src/context_statusline_tests.rs
 new file mode 100644
-index 000000000..39c9ea619
+index 000000000..f7c048dca
 --- /dev/null
 +++ b/codex-rs/tui/src/context_statusline_tests.rs
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,231 @@
 +use super::*;
 +use pretty_assertions::assert_eq;
 +use ratatui::buffer::Buffer;
@@ -783,6 +872,105 @@ index 000000000..39c9ea619
 +    let inner = panel.inner.lock().unwrap();
 +    assert!(inner.tools.is_empty());
 +    assert!(inner.lines.is_empty());
++}
++
++#[tokio::test]
++async fn renderer_cleans_up_descendants_after_timeout_and_success() {
++    for finish in ["import time;time.sleep(10)", "pass"] {
++        let dir = tempdir().unwrap();
++        let ticks = dir.path().join("ticks");
++        let pidfile = dir.path().join("pid");
++        let descendant = format!(
++            "import time\nf=open({:?},'a',buffering=1)\nfor _ in range(250):\n f.write('x');f.flush();time.sleep(0.02)\n",
++            ticks.to_string_lossy()
++        );
++        let code = format!(
++            "import subprocess,sys,time,pathlib\np=subprocess.Popen([sys.executable,'-c', {descendant:?}],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)\npathlib.Path({:?}).write_text(str(p.pid))\nwhile not pathlib.Path({:?}).exists(): time.sleep(0.005)\n{finish}",
++            pidfile.to_string_lossy(),
++            ticks.to_string_lossy()
++        );
++        let command = vec![
++            if cfg!(windows) {
++                "python".into()
++            } else {
++                "python3".into()
++            },
++            "-c".into(),
++            code,
++        ];
++        let _ = run_renderer(&command, json!({})).await;
++        tokio::time::sleep(Duration::from_millis(100)).await;
++        let before = std::fs::metadata(&ticks).unwrap().len();
++        tokio::time::sleep(Duration::from_millis(200)).await;
++        let after = std::fs::metadata(&ticks).unwrap().len();
++        let pid = std::fs::read_to_string(pidfile).unwrap();
++        let _ = std::process::Command::new(&command[0])
++            .args([
++                "-c",
++                &format!("import os,signal;os.kill({pid},signal.SIGTERM)"),
++            ])
++            .stderr(Stdio::null())
++            .status();
++        assert_eq!(
++            before, after,
++            "renderer descendant remained active: {finish}"
++        );
++    }
++}
++
++#[tokio::test]
++async fn renderer_stdin_is_bounded_and_internal_roles_are_not_forwarded() {
++    let dir = tempdir().unwrap();
++    let capture = dir.path().join("capture.json");
++    let code = format!(
++        "import pathlib,sys;pathlib.Path({:?}).write_bytes(sys.stdin.buffer.read());print('ok')",
++        capture.to_string_lossy()
++    );
++    let panel = Panel::new(
++        vec![
++            if cfg!(windows) {
++                "python".into()
++            } else {
++                "python3".into()
++            },
++            "-c".into(),
++            code,
++        ],
++        FrameRequester::test_dummy(),
++    );
++    let oversized = "x\n\u{202e}".repeat(100_000);
++    panel.update(json!({"session_id":"main", "model":oversized, "cwd":oversized, "branch":oversized, "agent_roles":{"child":oversized}}));
++    panel
++        .inner
++        .lock()
++        .unwrap()
++        .agents
++        .insert("child".into(), json!({"id":"child", "status":"running"}));
++    panel.refresh(80);
++    for _ in 0..200 {
++        if capture.exists() {
++            break;
++        }
++        tokio::time::sleep(Duration::from_millis(10)).await;
++    }
++    let raw = std::fs::read(capture).unwrap();
++    assert!(
++        raw.len() < 16_384,
++        "metadata crossed subprocess boundary without bounds: {}",
++        raw.len()
++    );
++    let value: Value = serde_json::from_slice(&raw).unwrap();
++    assert!(value.get("agent_roles").is_none());
++    for text in [
++        &value["model"],
++        &value["cwd"],
++        &value["branch"],
++        &value["agents"][0]["role"],
++    ] {
++        let text = text.as_str().unwrap();
++        assert!(text.chars().count() <= 512);
++        assert!(!text.chars().any(|c| c.is_control() || c == '\u{202e}'));
++    }
 +}
 diff --git a/codex-rs/tui/src/lib.rs b/codex-rs/tui/src/lib.rs
 index 147ff230b..90bddceef 100644

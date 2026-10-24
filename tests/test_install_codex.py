@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import tempfile
 import unittest
@@ -22,13 +23,66 @@ class InstallCodexTests(unittest.TestCase):
         stock.write_text('STOCK_CODEX')
 
     def make_bundle(self, version):
-        files = {('codex.exe' if os.name == 'nt' else 'codex'): b'#!/bin/sh\necho codex-test\n', 'codex_statusline.py': b'# renderer\n',
-                 'launch_codex.py': b'# launcher\n', 'context_statusline.py': b'# shared\n',
-                 'activity.py': b'# activity\n', 'session_snapshot.py': b'# snapshots\n'}
+        suffix = '.exe' if os.name == 'nt' else ''
+        system = platform.system().lower()
+        arch = {'arm64': 'aarch64', 'amd64': 'x86_64'}.get(platform.machine().lower(), platform.machine().lower())
+        target = arch + {'darwin': '-apple-darwin', 'linux': '-unknown-linux-musl', 'windows': '-pc-windows-msvc'}[system]
+        entrypoint = 'bin/codex' + suffix
+        package = {'layoutVersion': 1, 'version': version, 'target': target, 'variant': 'codex',
+                   'entrypoint': entrypoint, 'resourcesDir': 'codex-resources', 'pathDir': 'codex-path'}
+        files = {entrypoint: b'#!/bin/sh\necho codex-test\n', 'bin/codex-code-mode-host'+suffix: b'helper',
+                 'codex-path/rg'+suffix: b'rg', 'codex-package.json': json.dumps(package).encode(),
+                 'codex_statusline.py': b'# renderer\n', 'launch_codex.py': b'# launcher\n',
+                 'context_statusline.py': b'# shared\n', 'activity.py': b'# activity\n', 'session_snapshot.py': b'# snapshots\n'}
+        if system == 'linux': files['codex-resources/bwrap'] = b'bwrap'
+        if system == 'windows':
+            for helper in ['codex-command-runner.exe', 'codex-windows-sandbox-setup.exe']:
+                files['codex-resources/'+helper] = b'helper'
         for name, data in files.items():
+            (self.bundle/name).parent.mkdir(parents=True, exist_ok=True)
             (self.bundle/name).write_bytes(data)
-        manifest = {'version': version, 'files': {name: hashlib.sha256(data).hexdigest() for name,data in files.items()}}
+        manifest = {'version': version, 'entrypoint': entrypoint,
+                    'platform': system+'-'+platform.machine().lower(),
+                    'files': {name: hashlib.sha256(data).hexdigest() for name,data in files.items()}}
         (self.bundle/'manifest.json').write_text(json.dumps(manifest))
+
+    def mutate_manifest(self, change):
+        path = self.bundle/'manifest.json'
+        value = json.loads(path.read_text())
+        change(value)
+        path.write_text(json.dumps(value))
+
+    def test_wrong_os_or_architecture_is_rejected_before_activation(self):
+        for target in ['other-arm64', platform.system().lower()+'-wrongarch']:
+            with self.subTest(target=target):
+                self.make_bundle('0.164.0-statusline.1')
+                self.mutate_manifest(lambda value: value.update(platform=target))
+                with self.assertRaisesRegex(ValueError, 'platform'):
+                    install(self.bundle, self.prefix)
+                self.assertFalse((self.prefix/'lib/context-statusline').exists())
+
+    def test_inconsistent_canonical_metadata_is_rejected(self):
+        for field, bad in [('target', 'x86_64-other-os'), ('version', 'other'), ('entrypoint', 'codex'),
+                           ('layoutVersion', 2), ('variant', 'other'), ('pathDir', 'other'), ('resourcesDir', 'other')]:
+            with self.subTest(field=field):
+                self.make_bundle('0.164.0-statusline.1')
+                path = self.bundle/'codex-package.json'
+                package = json.loads(path.read_text())
+                package[field] = bad
+                path.write_text(json.dumps(package))
+                self.mutate_manifest(lambda value: value['files'].update({'codex-package.json': hashlib.sha256(path.read_bytes()).hexdigest()}))
+                with self.assertRaisesRegex(ValueError, 'package'):
+                    install(self.bundle, self.prefix)
+
+    def test_missing_canonical_helpers_are_rejected(self):
+        manifest = json.loads((self.bundle/'manifest.json').read_text())
+        helpers = [name for name in manifest['files'] if name.startswith(('codex-path/', 'codex-resources/', 'bin/codex-code-mode'))]
+        for helper in helpers:
+            with self.subTest(helper=helper):
+                self.make_bundle('0.164.0-statusline.1')
+                self.mutate_manifest(lambda value: value['files'].pop(helper))
+                with self.assertRaisesRegex(ValueError, 'runtime'):
+                    install(self.bundle, self.prefix)
 
     def test_install_uses_verified_immutable_bundle_and_preserves_stock(self):
         launcher = install(self.bundle, self.prefix)
@@ -41,7 +95,7 @@ class InstallCodexTests(unittest.TestCase):
     def test_tampering_and_symlink_do_not_activate_or_overwrite(self):
         for mode in ['contents', 'symlink']:
             self.make_bundle('0.164.0-statusline.1')
-            binary = self.bundle/('codex.exe' if os.name == 'nt' else 'codex')
+            binary = self.bundle/'bin'/('codex.exe' if os.name == 'nt' else 'codex')
             if mode == 'contents': binary.write_text('TAMPERED')
             else:
                 binary.unlink()
@@ -68,12 +122,6 @@ class InstallCodexTests(unittest.TestCase):
 
     def test_canonical_nested_package_layout_is_verified_and_installed(self):
         binary = 'codex.exe' if os.name == 'nt' else 'codex'
-        (self.bundle/'bin').mkdir()
-        (self.bundle/binary).rename(self.bundle/'bin'/binary)
-        manifest = json.loads((self.bundle/'manifest.json').read_text())
-        manifest['entrypoint'] = 'bin/' + binary
-        manifest['files']['bin/' + binary] = manifest['files'].pop(binary)
-        (self.bundle/'manifest.json').write_text(json.dumps(manifest))
         install(self.bundle, self.prefix)
         installed = self.prefix/'lib/context-statusline/versions/0.164.0-statusline.1'
         self.assertTrue((installed/'bin'/binary).is_file())

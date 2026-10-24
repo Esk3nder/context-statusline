@@ -47,6 +47,7 @@ def prepare(source, metadata):
     if not source.exists():
         source.mkdir(parents=True)
         run(['git', 'init', str(source)])
+        run(['git', 'config', 'core.autocrlf', 'false'], source)
         run(['git', 'remote', 'add', 'origin', metadata['repository']], source)
         run(['git', 'fetch', '--depth', '1', '--no-tags', 'origin', metadata['revision']], source)
         run(['git', 'checkout', '--detach', 'FETCH_HEAD'], source)

@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import platform
 import re
 import shlex
 import shutil
@@ -34,13 +35,26 @@ def verify(bundle):
     if not isinstance(manifest, dict):
         raise ValueError('Invalid bundle manifest')
     version, files = manifest.get('version'), manifest.get('files')
-    binary = 'codex.exe' if os.name == 'nt' else 'codex'
+    system = platform.system().lower()
+    aliases = {'arm64': 'aarch64', 'amd64': 'x86_64'}
+    arch = aliases.get(platform.machine().lower(), platform.machine().lower())
+    host = system + '-' + arch
+    advertised = manifest.get('platform', '')
+    advertised_os, _, advertised_arch = advertised.partition('-') if isinstance(advertised, str) else ('', '', '')
+    if advertised_os + '-' + aliases.get(advertised_arch, advertised_arch) != host:
+        raise ValueError('Bundle platform does not match this computer')
+    suffix = '.exe' if system == 'windows' else ''
+    binary = 'codex' + suffix
     if not isinstance(version, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,100}', version):
         raise ValueError('Invalid bundle version')
-    entrypoint = manifest.get('entrypoint', binary)
-    if not isinstance(entrypoint, str) or Path(entrypoint).name != binary:
+    entrypoint = manifest.get('entrypoint')
+    if entrypoint != 'bin/' + binary:
         raise ValueError('Invalid bundle entrypoint')
-    if not isinstance(files, dict) or not (RUNTIME | {entrypoint}) <= files.keys() or len(files) > 32:
+    required = RUNTIME | {entrypoint, 'codex-package.json', 'bin/codex-code-mode-host'+suffix, 'codex-path/rg'+suffix}
+    if system == 'linux': required.add('codex-resources/bwrap')
+    if system == 'windows':
+        required |= {'codex-resources/codex-command-runner.exe', 'codex-resources/codex-windows-sandbox-setup.exe'}
+    if not isinstance(files, dict) or not required <= files.keys() or len(files) > 32:
         raise ValueError('Missing bundle runtime files')
     for name, expected in files.items():
         parts = name.split('/')
@@ -49,6 +63,16 @@ def verify(bundle):
         path = bundle/name
         if any((bundle.joinpath(*parts[:index])).is_symlink() for index in range(1, len(parts)+1)) or not path.is_file() or digest(path) != expected:
             raise ValueError('Bundle verification failed: ' + name)
+    package = json.loads((bundle/'codex-package.json').read_text())
+    targets = {
+        'darwin': {arch+'-apple-darwin'},
+        'linux': {arch+'-unknown-linux-gnu', arch+'-unknown-linux-musl'},
+        'windows': {arch+'-pc-windows-msvc'},
+    }
+    expected_package = {'layoutVersion': 1, 'version': version, 'variant': 'codex',
+                        'entrypoint': entrypoint, 'resourcesDir': 'codex-resources', 'pathDir': 'codex-path'}
+    if not isinstance(package, dict) or any(package.get(key) != value for key, value in expected_package.items()) or not isinstance(package.get('target'), str) or package['target'] not in targets.get(system, set()):
+        raise ValueError('Inconsistent canonical package metadata')
     return manifest
 
 
