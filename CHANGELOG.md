@@ -15,6 +15,10 @@
 - Use the supplied session cost estimate instead of repricing context tokens.
 - Preserve unknown metrics instead of displaying false zeroes.
 - Treat model labels as text, remove terminal control sequences, and respect host width without touching `/dev/tty`.
+- Readable on light terminal themes: text follows the terminal foreground; meter fills use mid tones with at least 3:1 contrast on white and near-black; alerts color only their `!` marker.
+- Fit inside Claude's footer spacing (`COLUMNS` less four cells) instead of overflowing into `…`.
+- Name the repository that owns the displayed branch, not the folder where the session started.
+- Omit zero configuration counts and name hook counts as `hooks on N events`.
 
 ### Changed
 - Requires Python 3.10+ instead of `jq`. Install all four runtime files together; `context-bar.sh` remains the entry point.

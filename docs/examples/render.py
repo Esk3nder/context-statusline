@@ -12,7 +12,8 @@ from codex_statusline import render_codex  # noqa: E402
 
 NOW = 1700000000
 HERE = Path(__file__).parent
-ANSI = re.compile(r'\x1b\[(?:38;2;(\d+);(\d+);(\d+)|0|1)m')
+ANSI = re.compile(r'\x1b\[(?:38;2;(\d+);(\d+);(\d+)|0|1|2|39)m')
+INK, FAINT = '#e5e7eb', 'rgb(122,126,132)'  # terminal foreground and its faint form on this dark card
 
 
 def example(situation='quiet', width=128, color=True):
@@ -50,14 +51,16 @@ def svg(text, width):
                 '<rect width="100%" height="100%" rx="8" fill="#10151e"/>',
                 '<g font-family="Menlo,Consolas,monospace" font-size="13" xml:space="preserve">']
     for index, line in enumerate(rows):
-        fragments, last, fill, bold = [], 0, '#e5e7eb', False
+        fragments, last, fill, bold = [], 0, INK, False
         for match in ANSI.finditer(line):
             if match.start() > last:
                 fragments.append(f'<tspan fill="{fill}" font-weight="{600 if bold else 400}">{escape(line[last:match.start()])}</tspan>')
             if match.group() == '\x1b[1m':
                 bold = True
-            elif match.group() == '\x1b[0m':
-                fill, bold = '#e5e7eb', False
+            elif match.group() in ('\x1b[0m', '\x1b[39m'):
+                fill, bold = INK, bold and match.group() == '\x1b[39m'
+            elif match.group() == '\x1b[2m':
+                fill = FAINT
             else:
                 fill = f'rgb({match[1]},{match[2]},{match[3]})'
             last = match.end()

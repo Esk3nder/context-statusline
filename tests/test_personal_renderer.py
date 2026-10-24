@@ -31,7 +31,27 @@ class PersonalRendererTests(unittest.TestCase):
         self.assertIn('/workspace/context-statusline', text)
         self.assertIn('2 CLAUDE.md', text)
         self.assertIn('6 MCPs configured', text)
-        self.assertIn('4 hook events', text)
+        self.assertIn('hooks on 4 events', text)
+
+    def test_zero_configuration_counts_are_omitted(self):
+        snapshot = copy.deepcopy(SNAPSHOT)
+        snapshot['config'].update(rules=0, hooks=0)
+        text = self.render(snapshot=snapshot)
+        self.assertIn('2 CLAUDE.md · 6 MCPs configured', text)
+        self.assertNotIn('0 rules', text)
+        self.assertNotIn('hooks on', text)
+
+    def test_closing_rule_separates_instruments_from_host_lines_below(self):
+        # Claude always prints its own lines under the statusline, so the rule never dangles.
+        snapshot = copy.deepcopy(SNAPSHOT)
+        snapshot['tasks']['tasks'] = []
+        self.assertEqual(set(self.render(snapshot=snapshot).splitlines()[-1]), {'─'})
+
+    def test_alert_text_uses_terminal_foreground_and_colors_only_the_marker(self):
+        data = copy.deepcopy(BASE)
+        data['context_window']['used_percentage'] = 91
+        text = render_main(data, 128, True, False, NOW, {}, snapshot=SNAPSHOT)
+        self.assertRegex(text, r'\x1b\[38;2;217;119;6m ?! ?\x1b\[0m\x1b\[1m\x1b\[39m ?CONTEXT PRESSURE')
 
     def test_full_checklist_wraps_without_losing_long_subjects(self):
         snapshot = copy.deepcopy(SNAPSHOT)
@@ -106,9 +126,30 @@ class PersonalRendererTests(unittest.TestCase):
     def test_neutral_text_preserves_meter_color_without_purple(self):
         text = self.render(color=True)
         self.assertNotIn('\x1b[38;2;165;180;252m', text)
-        self.assertIn('\x1b[38;2;229;231;235m37%', text)
-        self.assertIn('\x1b[38;2;74;222;128m█', text)
+        self.assertIn('\x1b[39m37%', text)
+        self.assertIn('\x1b[38;2;22;163;74m█', text)
         self.assertIn('Add task and activity panels', ANSI.sub('', text))
+
+    def test_meter_fills_are_mid_tones_that_hold_on_light_and_dark(self):
+        # Fills need >= 3:1 non-text contrast on white and on a near-black terminal.
+        def luminance(rgb):
+            channel = [c / 255 for c in rgb]
+            channel = [c / 12.92 if c <= .03928 else ((c + .055) / 1.055) ** 2.4 for c in channel]
+            return .2126 * channel[0] + .7152 * channel[1] + .0722 * channel[2]
+        text = self.render(color=True)
+        fills = {tuple(map(int, m)) for m in re.findall(r'\x1b\[38;2;(\d+);(\d+);(\d+)m[▏▎▍▌▋▊▉█]', text)}
+        self.assertTrue(fills)
+        for rgb in fills:
+            level = luminance(rgb)
+            self.assertGreaterEqual(1.05 / (level + .05), 3, rgb)
+            self.assertGreaterEqual((level + .05) / (luminance((30, 30, 30)) + .05), 3, rgb)
+
+    def test_neutral_text_follows_terminal_foreground_on_any_theme(self):
+        text = self.render(color=True)
+        # Fixed light greys vanish on light terminal themes.
+        for rgb in ['229;231;235', '244;245;247', '166;173;183', '126;135;147', '48;60;76', '57;71;92']:
+            self.assertNotIn(f'\x1b[38;2;{rgb}m', text)
+        self.assertIn('\x1b[2m', text)
 
     def test_current_task_has_bold_emphasis(self):
         self.assertRegex(self.render(color=True), r'\x1b\[1m[^\n]*Add task and activity panels')

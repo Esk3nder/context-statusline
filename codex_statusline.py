@@ -8,7 +8,7 @@ import sys
 import time
 
 from context_statusline import (MAX_INPUT, clean, number, obj, render_main, render_subagents,
-                                segment, paint, wrap_parts)
+                                segment, paint, wrap_parts, alert)
 
 
 def bounded_list(value, limit=256):
@@ -92,12 +92,12 @@ def render_codex(payload, width=80, color=True, now=None):
         text += json.loads(row)['content'] + '\n'
     if payload.get('partial') is True:
         text += '\n'.join(paint(row, width, color, False) for row in wrap_parts(
-            [segment(' ! Codex metadata incomplete', 'warn')], width)) + '\n'
+            alert('Codex metadata incomplete'), width)) + '\n'
     rows, size = [], 0
     for line in text.splitlines():
         encoded = len(line.encode('utf-8')) + 1
         if len(rows) >= 63 or size + encoded > 48 * 1024:
-            rows.append(paint([segment(' ! Statusline clipped · bounded display', 'warn')], width, color, False))
+            rows.append(paint(alert('Statusline clipped · bounded display'), width, color, False))
             break
         rows.append(line)
         size += encoded

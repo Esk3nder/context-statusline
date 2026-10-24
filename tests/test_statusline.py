@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import unittest
 import unicodedata
 
@@ -148,7 +149,24 @@ class MainRendererTests(unittest.TestCase):
                 result = invoke(payload, columns)
                 for row in visible(result.stdout).splitlines():
                     cells = sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in 'WF' else 1 for c in row)
-                    self.assertLessEqual(cells, columns, row)
+                    self.assertLessEqual(cells, columns - 4, row)
+
+    def test_header_names_the_repository_that_owns_the_branch(self):
+        # Session started in a home folder; work happens in a repository below it.
+        with tempfile.TemporaryDirectory() as home:
+            repo = Path(home) / 'tool-repo'
+            (repo / 'src').mkdir(parents=True)
+            subprocess.run(['git', 'init', '-q', '-b', 'topic', str(repo)], check=True)
+            payload = copy.deepcopy(FIXTURE)
+            payload['workspace'] = {'project_dir': home, 'current_dir': str(repo / 'src')}
+            header = visible(invoke(payload, 100).stdout).splitlines()[0]
+            self.assertTrue(header.startswith('tool-repo / topic'), header)
+
+    def test_rule_fills_footer_inside_claude_inset(self):
+        # COLUMNS is the full terminal; Claude's footer spacing takes four cells.
+        rows = visible(invoke(FIXTURE, 100).stdout).splitlines()
+        self.assertIn('─' * 96, rows)
+        self.assertTrue(all(len(row) <= 96 for row in rows))
 
     def test_ascii_and_plain_modes_have_no_escape_sequences(self):
         result = invoke(FIXTURE, 100, '--ascii')
@@ -157,7 +175,8 @@ class MainRendererTests(unittest.TestCase):
 
     def test_normal_session_has_native_elapsed_time_without_health_badges(self):
         text = visible(invoke(FIXTURE).stdout)
-        self.assertIn('EST. COST', text)
+        self.assertIn('SESSION COST', text)
+        self.assertEqual(text.count('estimate'), 1)
         self.assertIn('12m3s session', text)
         self.assertNotIn('healthy', text.lower())
         self.assertNotIn('PRESSURE', text)
