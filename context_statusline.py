@@ -7,6 +7,7 @@ import argparse
 import json
 import math
 import os
+import re
 from pathlib import Path
 import shlex
 import sqlite3
@@ -16,11 +17,13 @@ import time
 import unicodedata
 
 from activity import EVENTS, load_state, observe
+from session_snapshot import config_snapshot, task_snapshot
 
 MAX_INPUT = 1024 * 1024
-COLORS = {'muted': (148, 163, 184), 'ink': (203, 213, 225),
-          'accent': (165, 180, 252), 'empty': (71, 85, 105),
-          'good': (74, 222, 128), 'warn': (251, 191, 36), 'bad': (251, 113, 133)}
+COLORS = {'muted': (166, 173, 183), 'ink': (229, 231, 235),
+          'current': (244, 245, 247), 'dim': (126, 135, 147), 'rule': (48, 60, 76),
+          'empty': (57, 71, 92), 'good': (74, 222, 128),
+          'warn': (251, 191, 36), 'bad': (251, 113, 133)}
 
 
 def obj(value):
@@ -69,7 +72,8 @@ def paint(parts, width, use_color, ascii_mode):
         text = clip(text, max(0, width - used))
         used += cell_width(text)
         rgb = COLORS.get(style, style)
-        result.append(f'\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m{text}\033[0m'
+        emphasis = '\033[1m' if style == 'current' else ''
+        result.append(f'{emphasis}\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m{text}\033[0m'
                       if text and use_color else text)
     return ''.join(result)
 
@@ -130,18 +134,65 @@ def metrics(data, now):
     return pct, left, number(obj(data.get('cost')).get('total_cost_usd')), quota
 
 
+def wrap_parts(parts, width, indent=0):
+    """Wrap styled words by terminal cells; split long words without losing text."""
+    width = max(1, width)
+    indent = min(indent, width // 3)
+    rows, line, used, space = [], [], 0, 0
+
+    def append(text, style):
+        if line and line[-1][1] == style:
+            line[-1] = (line[-1][0] + text, style)
+        else:
+            line.append((text, style))
+
+    def flush():
+        nonlocal line, used
+        rows.append(line)
+        line = [segment(' ' * indent)] if indent else []
+        used = indent
+
+    for text, style in parts:
+        for token in re.findall(r'\s+|\S+', text):
+            if token.isspace():
+                space += len(token)
+                continue
+            if used and used + space + cell_width(token) > width:
+                flush()
+                space = 0
+            if space:
+                gap = min(space, max(0, width - used))
+                append(' ' * gap, style)
+                used += gap
+                space = 0
+            for char in token:
+                size = cell_width(char)
+                if size > width:
+                    char, size = '?', 1  # A two-cell glyph cannot fit a one-cell host.
+                if used + size > width:
+                    flush()
+                append(char, style)
+                used += size
+    if line and any(text.strip() for text, _ in line):
+        rows.append(line)
+    return rows or [[]]
+
+
 def identity(data, width):
     workspace = obj(data.get('workspace'))
     project = clean(obj(workspace.get('repo')).get('name') or Path(clean(
         workspace.get('project_dir') or workspace.get('current_dir') or data.get('cwd') or 'workspace')).name)
     model = clean(obj(data.get('model')).get('display_name') or 'model unavailable')
     effort = clean(obj(data.get('effort')).get('level'))
-    right = model + (f' · {effort}' if effort else '')
+    extra = (f' · {effort}' if effort else '')
     if data.get('fast_mode') is True:
-        right += ' · fast'
+        extra += ' · fast'
+    duration = number(obj(data.get('cost')).get('total_duration_ms'))
+    if duration is not None:
+        extra += ' · ' + elapsed(duration / 1000) + ' session'
+    right = [segment(model), segment(extra, 'muted')]
     branch = clean(obj(data.get('worktree')).get('branch'))
     cwd = workspace.get('current_dir') or data.get('cwd')
-    # Fixed argv, no shell or git hooks; bounded on slow repositories.
     if not branch and isinstance(cwd, str) and Path(cwd).is_dir():
         try:
             branch = clean(subprocess.run(['git', '-C', cwd, 'symbolic-ref', '--short', 'HEAD'],
@@ -149,59 +200,156 @@ def identity(data, width):
         except (OSError, subprocess.TimeoutExpired):
             pass
     left = project + (f' / {branch}' if branch else '')
-    if width < 36:
-        return [segment(right, 'accent')]
-    left = clip(left, max(8, width - min(cell_width(right), width // 2) - 3))
-    gap = max(2, width - cell_width(left) - cell_width(right))
-    return [segment(left), segment(' ' * gap), segment(right, 'accent')]
+    if width >= 76:
+        available = max(8, width - cell_width(model + extra) - 2)
+        left = clip(left, available)
+        gap = max(2, width - cell_width(left) - cell_width(model + extra))
+        return [[segment(left), segment(' ' * gap)] + right]
+    return wrap_parts([segment(left)], width) + wrap_parts(right, width)
 
 
 def columns(cells, width):
-    result = [segment(' ')]
+    result = []
     for index, cell in enumerate(cells):
         length = 0
         for text, style in cell:
-            text = clip(text, max(0, width - 1 - length))
+            text = clip(text, max(0, width - length))
             result.append((text, style))
             length += cell_width(text)
         if index < len(cells) - 1:
-            result.append(segment(' ' * max(1, width - length)))
+            result.append(segment(' ' * max(0, width - length)))
     return result
 
 
-def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=None):
+def pending_detail(record, now):
+    last = number(record.get('last'))
+    if last is None or not 0 <= now - last < 86400:
+        return []
+    pending = []
+    for value in obj(record.get('pending')).values():
+        value = obj(value)
+        at = number(value.get('at'))
+        if at is not None and 0 <= now - at < 86400:
+            pending.append((at, value))
+    if not pending:
+        return []
+    at, latest = max(pending, key=lambda item: item[0])
+    text = clean(latest.get('tool') or 'tool')
+    target = clean(latest.get('target'))
+    if target:
+        text += ' ' + target
+    detail = ' · awaiting result · ' + elapsed(now - at)
+    if len(pending) > 1:
+        detail += f' · +{len(pending) - 1} calls'
+    return [segment(text), segment(detail, 'muted')]
+
+
+def checklist(state, snapshot):
+    native = obj(snapshot.get('tasks'))
+    main = obj(obj(state.get('agents')).get('@main'))
+    if native.get('available'):
+        tasks, partial = native.get('tasks'), bool(native.get('partial'))
+    else:
+        tasks, partial = main.get('todos'), bool(main.get('todos_partial')) or bool(native.get('partial'))
+    items = []
+    if isinstance(tasks, list):
+        for task in tasks[:256]:
+            task = obj(task)
+            subject, status = clean(task.get('subject')), task.get('status')
+            if subject and status in ('pending', 'in_progress', 'completed'):
+                items.append({'subject': subject, 'status': status})
+            else:
+                partial = True
+        partial |= len(tasks) > 256
+    return items, partial
+
+
+def task_rows(state, snapshot, width):
+    items, partial = checklist(state, snapshot)
+    if not items and not partial:
+        return []
+    done = [task for task in items if task['status'] == 'completed']
+    work = [task for task in items if task['status'] != 'completed']
+    prefix = [segment('TASKS   ', 'muted'), segment(f'{len(done)}/{len(items)}  ', 'muted')]
+
+    def subjects(tasks):
+        parts = []
+        for task in tasks:
+            if parts:
+                parts.append(segment(' · ', 'dim'))
+            status = task['status']
+            glyph = {'completed': '✓ ', 'in_progress': '▸ ', 'pending': '□ '}[status]
+            parts.append(segment(glyph + task['subject'], 'dim' if status == 'completed' else
+                                 'current' if status == 'in_progress' else 'muted'))
+        return parts
+
+    rows = wrap_parts(prefix + subjects(done or work), width, 13)
+    if done and work:
+        rows += wrap_parts([segment(' ' * min(13, width // 3))] + subjects(work), width, 13)
+    if partial:
+        rows += wrap_parts([segment(' ! Task list incomplete · unsupported, unreadable or bounded data', 'warn')], width)
+    return rows
+
+
+def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=None, snapshot=None):
     now = time.time() if now is None else now
+    state, snapshot = state or {}, snapshot or {}
     pct, left, cost, (usage, label, reset) = metrics(data, now)
     pct_text = f'{pct:g}%' if pct is not None else 'unavailable'
     room = compact_tokens(left) + ' left' if left is not None else 'room unavailable'
     quota_text = f'{usage:g}%' if usage is not None else 'unavailable'
-    reset_text = ('reset ' if ascii_mode else '↻ ') + elapsed(reset - now) if reset is not None else 'reset unavailable'
+    reset_text = 'reset ' + elapsed(reset - now) if reset is not None else 'reset unavailable'
     price = 'unavailable' if cost is None else f'${cost:.4f}' if 0 < cost < .01 else f'${cost:.2f}'
-    rows = [identity(data, width)]
+    rows = identity(data, width)
+    workspace = obj(data.get('workspace'))
+    directory = clean(workspace.get('current_dir') or data.get('cwd'))
+    config = obj(snapshot.get('config'))
+    meta = [segment(directory, 'muted')] if directory else []
+    if config:
+        summary = (f"{config.get('instructions', 0)} CLAUDE.md · {config.get('rules', 0)} rules · "
+                   f"{config.get('mcps', 0)} MCPs configured · {config.get('hooks', 0)} hook events")
+        meta += [segment(('    ' if meta else '') + summary, 'dim')]
+    if meta:
+        rows += wrap_parts(meta, width, 2)
+    rows.append([segment(('-' if ascii_mode else '─') * width, 'rule')])
     quota_label = f'{label} QUOTA USED' if usage is not None else 'QUOTA'
-    if width >= 76:
-        col = (width - 1) // 3
-        rows += [columns([[segment(x, 'muted')] for x in ['CONTEXT USED', quota_label, 'EST. COST']], col),
-                 columns([meter(pct, col - 5, True, ascii_mode), meter(usage, col - 5, False, ascii_mode), [segment(price)]], col),
-                 columns([[segment(f'{pct_text} · {room}', severity(pct))],
-                          [segment(f'{quota_text} · {reset_text}', severity(usage))], [segment('session estimate', 'muted')]], col)]
-    elif width >= 36:
-        col = (width - 1) // 2
-        rows += [columns([[segment('CONTEXT USED', 'muted')], [segment(quota_label, 'muted')]], col),
-                 columns([meter(pct, col - 5, True, ascii_mode), meter(usage, col - 5, False, ascii_mode)], col),
-                 columns([[segment(pct_text, severity(pct))], [segment(quota_text, severity(usage))]], col),
-                 [segment(' ' + room + ' · ' + reset_text, 'muted')],
-                 [segment(' ' + price), segment(' session estimate', 'muted')]]
-    else:
-        count = max(1, width - 12)
-        rows += [[segment('CTX ')] + meter(pct, count, True, ascii_mode) + [segment(' ' + pct_text, severity(pct))],
-                 [segment(label + ' ')] + meter(usage, count, False, ascii_mode) + [segment(' ' + quota_text, severity(usage))],
-                 [segment('est ' + price)]]
+    instruments = [('CONTEXT USED', pct, pct_text, room, True),
+                   (quota_label, usage, quota_text, reset_text, False),
+                   ('EST. COST', None, price, 'session estimate', False)]
+    count = 3 if width >= 100 else 2 if width >= 60 else 1
+    col = width // count
+    for index in range(0, 3, count):
+        group = instruments[index:index + count]
+        for level in range(3):
+            cells = []
+            for title, percent, value, detail, gradient in group:
+                parts = ([segment(title, 'muted')] if level == 0 else
+                         [segment(value)] if title == 'EST. COST' and level == 1 else
+                         meter(percent, max(1, col - 5), gradient, ascii_mode) if level == 1 else
+                         [segment(detail, 'muted')] if title == 'EST. COST' else
+                         [segment(value), segment(' · ' + detail, 'muted')])
+                cells.append(wrap_parts(parts, col))
+            for line_index in range(max(map(len, cells))):
+                rows.append(columns([cell[line_index] if line_index < len(cell) else [] for cell in cells], col))
+    rows.append([segment(('-' if ascii_mode else '─') * width, 'rule')])
+    main = pending_detail(obj(obj(state.get('agents')).get('@main')), now)
+    if main:
+        rows += wrap_parts([segment('MAIN    ', 'dim')] + main, width, 8)
+    rows += task_rows(state, snapshot, width)
+    used = obj(state.get('used'))
+    skills = [clean(x) for x in used.get('skills', []) if isinstance(x, str)] if isinstance(used.get('skills'), list) else []
+    mcps = [clean(x) for x in used.get('mcps', []) if isinstance(x, str)] if isinstance(used.get('mcps'), list) else []
+    categories = (['skills: ' + ', '.join(skills)] if skills else []) + (['MCP: ' + ', '.join(mcps)] if mcps else [])
+    if categories:
+        rows += wrap_parts([segment('USED    ', 'dim'), segment(' · '.join(categories), 'muted')], width, 8)
+    if config.get('partial'):
+        rows += wrap_parts([segment(' ! Config scan incomplete', 'warn')], width)
     if pct is not None and pct >= 85:
-        rows.append([segment(f' ! CONTEXT PRESSURE · {pct_text} · {room}', 'warn')])
+        rows += wrap_parts([segment(f' ! CONTEXT PRESSURE · {pct_text} · {room}', 'warn')], width)
     if usage is not None and usage >= 90:
-        rows.append([segment(f' ! QUOTA PRESSURE · {label} {quota_text} · {reset_text}', 'warn')])
-    rows.extend(notices(state or {}, now))
+        rows += wrap_parts([segment(f' ! QUOTA PRESSURE · {label} {quota_text} · {reset_text}', 'warn')], width)
+    for notice in notices(state, now):
+        rows += wrap_parts(notice, width)
     return '\n'.join(paint(row, width, color, ascii_mode) for row in rows) + '\n'
 
 
@@ -254,26 +402,25 @@ def render_subagents(data, width=80, color=True, ascii_mode=False, now=None, sta
         duration = ''
         if start is not None and end is not None and start / 1000 <= end <= now:
             duration = ' · ' + elapsed(end - start / 1000)
-        style = 'bad' if status in ('failed', 'killed') else 'accent' if status == 'running' else 'muted'
-        lines = [[segment(role + ' '), segment(status, style), segment(duration, 'muted')]]
+        style = 'bad' if status in ('failed', 'killed') else 'ink' if status == 'running' else 'dim'
+        parts = [segment(role + ' '), segment(status, style), segment(duration, 'muted')]
         last = number(record.get('last'))
-        # Completed task activity is historical; don't give it a live pending-call line.
         if status == 'running' and last is not None and 0 <= now - last < 86400:
-            detail = '  last event ' + elapsed(now - last) + ' ago'
             request = obj(record.get('request'))
-            pending = obj(record.get('pending'))
+            pending = pending_detail(record, now)
             if recent(request.get('at'), now):
-                detail += ' · approval requested'
+                parts.append(segment(' · approval requested', 'warn'))
             elif pending:
-                tool = clean(obj(next(iter(pending.values()))).get('tool') or 'tool')
-                detail += ' · ' + tool + ' tool result pending'
-            lines.append([segment(detail, 'muted')])
+                parts += [segment(' · ', 'dim')] + pending
+            else:
+                parts.append(segment(' · last event ' + elapsed(now - last) + ' ago', 'muted'))
+        lines = wrap_parts(parts, width, 2)
         content = '\n'.join(paint(line, width, color, ascii_mode) for line in lines)
         result.append(json.dumps({'id': identifier, 'content': content}, ensure_ascii=True))
     return '\n'.join(result) + ('\n' if result else '')
 
 
-def diagnostics(data, state, now):
+def diagnostics(data, state, now, snapshot=None):
     pct, left, cost, quota = metrics(data, now)
     cache = obj(data.get('prompt_cache'))
     return {'context_used_percentage': pct, 'context_tokens_left': left,
@@ -282,6 +429,7 @@ def diagnostics(data, state, now):
             'context_runway': None, 'quota_exhaustion': None,
             'forecast_reason': 'No validated growth/rate history or compaction threshold',
             'compaction': state.get('compaction'), 'activity': state.get('agents', {}),
+            'used': state.get('used', {}), 'local_snapshot': snapshot or {},
             'prompt_cache': {'warm': cache.get('warm') if isinstance(cache.get('warm'), bool) else None,
                              'hit_ratio': number(cache.get('hit_ratio'), maximum=1)}}
 
@@ -342,12 +490,17 @@ def main():
     color = not args.plain and 'NO_COLOR' not in os.environ and os.environ.get('TERM') != 'dumb'
     now = time.time()
     state = load_state(data.get('session_id'), now)
+    snapshot = {}
+    if not args.subagents:
+        cwd = obj(data.get('workspace')).get('current_dir') or data.get('cwd')
+        snapshot = {'config': config_snapshot(cwd), 'tasks': task_snapshot(data.get('session_id'))}
     if args.diagnostics:
-        print(json.dumps(diagnostics(data, state, now), indent=2, allow_nan=False))
+        print(json.dumps(diagnostics(data, state, now, snapshot), indent=2, allow_nan=False))
     else:
         width = terminal_width(data.get('columns') if args.subagents else os.environ.get('COLUMNS'))
-        renderer = render_subagents if args.subagents else render_main
-        sys.stdout.write(renderer(data, width, color, args.ascii, now, state))
+        output = (render_subagents(data, width, color, args.ascii, now, state) if args.subagents else
+                  render_main(data, width, color, args.ascii, now, state, snapshot))
+        sys.stdout.write(output)
     return 0
 
 

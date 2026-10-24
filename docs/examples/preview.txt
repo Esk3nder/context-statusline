@@ -1,10 +1,13 @@
-MAIN STATUSLINE
-context-statusline / fix/cost                                                            Opus · high
- CONTEXT USED                     5H QUOTA USED                    EST. COST
- ██████████▍░░░░░░░░░░░░░░░░░     ██████▏░░░░░░░░░░░░░░░░░░░░░     $0.50
- 37% · 126k left                  22% · ↻ 2h10m                    session estimate
-
-NATIVE AGENT PANEL
-reviewer running · 8m12s
-  last event 4m0s ago · Bash tool result pending
-researcher completed · 1m40s
+context-statusline / instrument-panel                                                               Opus · high · 18m42s session
+~/dev/context-statusline    2 CLAUDE.md · 8 rules · 6 MCPs configured · 4 hook events
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+CONTEXT USED                              5H QUOTA USED                             EST. COST
+█████████████▊░░░░░░░░░░░░░░░░░░░░░░░     ████████▏░░░░░░░░░░░░░░░░░░░░░░░░░░░░     $0.50
+37% · 126k left                           22% · reset 2h10m                         session estimate
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+MAIN    Read context_statusline.py · awaiting result · 3s
+TASKS   2/5  ✓ Inspect the existing renderer · ✓ Research statusline projects
+             ▸ Add task and activity panels · □ Verify main-session and subagent data · □ Update README and examples
+USED    skills: brainstorming, test-driven-development · MCP: context7
+AGENTS  reviewer running · 3m12s · Read test_statusline.py · awaiting result · 7s
+        researcher completed · 1m40s

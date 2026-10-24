@@ -18,7 +18,8 @@ class ActivityTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.state = Path(self.temp.name) / 'state'
-        self.env = dict(os.environ, CONTEXT_STATUSLINE_STATE_DIR=str(self.state), NO_COLOR='1')
+        self.env = dict(os.environ, CONTEXT_STATUSLINE_STATE_DIR=str(self.state), NO_COLOR='1',
+                        CLAUDE_CONFIG_DIR=str(Path(self.temp.name) / 'config'), CLAUDE_CODE_TASK_LIST_ID='')
         self.payload = copy.deepcopy(BASE)
         for task in self.payload['tasks']:
             task['startTime'] = int((time.time() - 192) * 1000)
@@ -81,6 +82,24 @@ class ActivityTests(unittest.TestCase):
         self.hook('SubagentStop')
         self.assertEqual(self.cached_state()['agents']['agent-review']['pending'], {})
 
+    def test_main_cli_reads_native_tasks_and_observed_targets_together(self):
+        tasks = Path(self.env['CLAUDE_CONFIG_DIR']) / 'tasks/fixture-session'
+        tasks.mkdir(parents=True)
+        task = tasks / '1.json'
+        task.write_text(json.dumps({'id': '1', 'subject': 'Native checklist item', 'status': 'in_progress'}))
+        self.hook('PostToolUse', agent='@main', tool_name='TodoWrite',
+                  tool_input={'todos': [{'content': 'Stale fallback', 'status': 'pending'}]})
+        self.hook('PreToolUse', agent='@main', tool_name='Read', tool_use_id='read-1',
+                  tool_input={'file_path': '/tmp/main.py'})
+        payload = {'session_id': 'fixture-session', 'columns': 128}
+        result = self.run_cli('--plain', payload)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('Native checklist item', result.stdout)
+        self.assertIn('Read main.py', result.stdout)
+        self.assertNotIn('Stale fallback', result.stdout)
+        task.unlink()
+        self.assertNotIn('TASKS', self.run_cli('--plain', payload).stdout)
+
     def test_native_jsonl_preserves_ids_and_reported_states(self):
         rows = self.rows()
         self.assertEqual([x['id'] for x in rows], ['agent-review', 'agent-research'])
@@ -100,12 +119,12 @@ class ActivityTests(unittest.TestCase):
     def test_pending_tool_is_not_claimed_to_be_executing(self):
         self.hook('PreToolUse', tool_name='Bash', tool_use_id='call-1')
         text = self.rows()[0]['content']
-        self.assertIn('last event', text)
-        self.assertIn('tool result pending', text)
+        self.assertIn('Bash', text)
+        self.assertIn('awaiting result', text)
         self.assertNotIn('still running', text)
         self.assertNotIn('stalled', text)
         self.hook('PostToolUse', tool_name='Bash', tool_use_id='call-1')
-        self.assertNotIn('result pending', self.rows()[0]['content'])
+        self.assertNotIn('awaiting result', self.rows()[0]['content'])
 
     def test_pending_parallel_calls_are_correlated_by_id(self):
         self.hook('PreToolUse', tool_name='Bash', tool_use_id='call-1')
@@ -113,22 +132,22 @@ class ActivityTests(unittest.TestCase):
         self.hook('PostToolUse', tool_name='Read', tool_use_id='call-2')
         self.assertIn('Bash', self.rows()[0]['content'])
         self.hook('PostToolUse', tool_name='Bash', tool_use_id='call-1')
-        self.assertNotIn('result pending', self.rows()[0]['content'])
+        self.assertNotIn('awaiting result', self.rows()[0]['content'])
 
     def test_unmatched_ids_do_not_get_someone_elses_activity(self):
         self.hook('PreToolUse', agent='different-id', tool_name='Bash', tool_use_id='call-1')
-        self.assertNotIn('last event', self.rows()[0]['content'])
+        self.assertNotIn('awaiting result', self.rows()[0]['content'])
 
     def test_sessions_are_isolated(self):
         self.hook('PreToolUse', session='other-session', tool_name='Bash', tool_use_id='call-1')
-        self.assertNotIn('last event', self.rows()[0]['content'])
+        self.assertNotIn('awaiting result', self.rows()[0]['content'])
 
     def test_permission_is_a_reported_event_not_a_permanent_waiting_claim(self):
         self.hook('PermissionRequest', tool_name='Bash')
         text = self.rows()[0]['content']
         self.assertIn('approval requested', text)
         self.assertNotIn('approval required', text)
-        self.assertNotIn('tool result pending', text)
+        self.assertNotIn('awaiting result', text)
 
     def test_observer_does_not_persist_tool_inputs_results_or_summary(self):
         secret = 'SECRET_VALUE_SHOULD_NEVER_BE_STORED'
@@ -147,12 +166,12 @@ class ActivityTests(unittest.TestCase):
         self.state.symlink_to(target, target_is_directory=True)
         self.hook('PreToolUse', tool_name='Bash', tool_use_id='call-1')
         self.assertEqual(list(target.iterdir()), [])
-        self.assertNotIn('last event', self.rows()[0]['content'])
+        self.assertNotIn('awaiting result', self.rows()[0]['content'])
 
     def test_session_end_clears_activity(self):
         self.hook('PreToolUse', tool_name='Bash', tool_use_id='call-1')
         self.hook('SessionEnd')
-        self.assertNotIn('last event', self.rows()[0]['content'])
+        self.assertNotIn('awaiting result', self.rows()[0]['content'])
 
     def test_concurrent_events_do_not_drop_other_agents(self):
         # Initialize the database, then exercise real separate writer processes.
@@ -163,13 +182,13 @@ class ActivityTests(unittest.TestCase):
             list(pool.map(write, range(8)))
         payload = copy.deepcopy(self.payload)
         payload['tasks'] = [dict(self.payload['tasks'][0], id=f'agent-{i}') for i in range(8)]
-        self.assertEqual(sum('result pending' in x['content'] for x in self.rows(payload)), 8)
+        self.assertEqual(sum('awaiting result' in x['content'] for x in self.rows(payload)), 8)
 
     def test_expired_cache_is_not_shown(self):
         self.hook('PreToolUse', tool_name='Bash', tool_use_id='call-1')
         with sqlite3.connect(self.state / 'activity.sqlite3') as db:
             db.execute('UPDATE sessions SET updated_at = 1')
-        self.assertNotIn('last event', self.rows()[0]['content'])
+        self.assertNotIn('awaiting result', self.rows()[0]['content'])
 
     def test_native_width_applies_to_every_content_line(self):
         self.hook('PreToolUse', tool_name='Bash', tool_use_id='call-1')

@@ -17,6 +17,8 @@ def invoke(payload, columns=100, *args):
     env = dict(os.environ, COLUMNS=str(columns), NO_COLOR='1', TERM='xterm-256color')
     # Never allow tests to inspect or update the real activity cache.
     env['CONTEXT_STATUSLINE_STATE_DIR'] = str(ROOT / '.test-nonexistent-state')
+    env['CLAUDE_CONFIG_DIR'] = str(ROOT / '.test-nonexistent-state/config')
+    env['CLAUDE_CODE_TASK_LIST_ID'] = ''
     return subprocess.run(['bash', str(ROOT / 'context-bar.sh'), '--plain', *args],
                           input=payload if isinstance(payload, str) else json.dumps(payload),
                           text=True, capture_output=True, env=env, timeout=5)
@@ -132,7 +134,7 @@ class MainRendererTests(unittest.TestCase):
         result = invoke(payload)
         self.assertNotIn('\x1b', result.stdout)
         self.assertNotIn('\u202e', result.stdout)
-        self.assertEqual(len(result.stdout.splitlines()), 4)
+        self.assertEqual(len(result.stdout.splitlines()), len(invoke(FIXTURE).stdout.splitlines()))
 
     def test_non_tty_execution_is_quiet(self):
         result = invoke(FIXTURE)
@@ -153,9 +155,9 @@ class MainRendererTests(unittest.TestCase):
         self.assertTrue(result.stdout.isascii())
         self.assertNotIn('\x1b', result.stdout)
 
-    def test_normal_session_has_no_health_badge_or_elapsed_instrument(self):
+    def test_normal_session_has_native_elapsed_time_without_health_badges(self):
         text = visible(invoke(FIXTURE).stdout)
         self.assertIn('EST. COST', text)
-        self.assertNotIn('12m', text)
+        self.assertIn('12m3s session', text)
         self.assertNotIn('healthy', text.lower())
         self.assertNotIn('PRESSURE', text)
