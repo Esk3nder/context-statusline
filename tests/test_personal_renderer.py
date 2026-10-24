@@ -54,6 +54,14 @@ class PersonalRendererTests(unittest.TestCase):
         self.assertNotIn('TASKS', text)
         self.assertNotIn('Old task', text)
 
+    def test_rejected_native_list_does_not_activate_stale_legacy_tasks(self):
+        snapshot = copy.deepcopy(SNAPSHOT)
+        snapshot['tasks'] = {'available': False, 'partial': True, 'tasks': []}
+        state = {'agents': {'@main': {'todos': [{'subject': 'Stale fallback', 'status': 'pending'}]}}}
+        text = self.render(state=state, snapshot=snapshot)
+        self.assertNotIn('Stale fallback', text)
+        self.assertIn('Task list incomplete', text)
+
     def test_only_main_legacy_todos_fill_missing_native_list(self):
         snapshot = copy.deepcopy(SNAPSHOT)
         snapshot['tasks'] = {'available': False, 'partial': False, 'tasks': []}

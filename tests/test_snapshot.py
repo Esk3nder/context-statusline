@@ -76,7 +76,8 @@ class SnapshotTests(unittest.TestCase):
         self.write(self.tasks / '1.json', {'id': '1', 'subject': 'Known', 'status': 'pending'})
         self.write(self.tasks / '2.json', {'id': '2', 'subject': 'Future', 'status': 'future_state'})
         (self.tasks / '3.json').write_text('{broken')
-        (self.tasks / '4.json').write_text(' ' * 70000)
+        self.write(self.tasks / '4.json', {'id': '4', 'subject': 'Oversized',
+            'status': 'pending', 'description': 'x' * 70000})
         result = self.snapshot()
         self.assertTrue(result['partial'])
         self.assertEqual([task['id'] for task in result['tasks']], ['1'])
@@ -123,3 +124,28 @@ class SnapshotTests(unittest.TestCase):
         result = config_snapshot(self.project, self.config, self.root / 'home')
         self.assertTrue(result['partial'])
         self.assertNotIn('secret', json.dumps(result))
+
+    def test_valid_large_account_configuration_uses_a_separate_limit(self):
+        self.write(self.root / 'home/.claude.json', {
+            'history': 'x' * 112127, 'mcpServers': {'global-server': {}}})
+        result = config_snapshot(self.project, self.config, self.root / 'home')
+        self.assertEqual(result['mcps'], 1)
+        self.assertFalse(result['partial'])
+
+    def test_configuration_limit_remains_bounded(self):
+        self.write(self.config / 'settings.json', {'history': 'x' * (1024 * 1024 + 1),
+            'mcpServers': {'too-large': {}}})
+        self.assertTrue(config_snapshot(self.project, self.config, self.root / 'home')['partial'])
+
+    def test_rejected_native_list_is_distinct_from_a_missing_list(self):
+        (self.config / 'tasks/unsafe').symlink_to(self.tasks, target_is_directory=True)
+        self.assertTrue(self.snapshot(list_id='unsafe')['partial'])
+        self.assertFalse(self.snapshot(list_id='missing')['partial'])
+
+    def test_unsupported_recognized_config_shapes_are_partial(self):
+        for field, value in [('mcpServers', []), ('hooks', []), ('disabledMcpServers', 'x'),
+                             ('disabledMcpjsonServers', [1]), ('mcpServers', {'invalid': []}),
+                             ('hooks', {'PreToolUse': 'invalid'})]:
+            with self.subTest(field=field, value=value):
+                self.write(self.config / 'settings.json', {field: value})
+                self.assertTrue(config_snapshot(self.project, self.config, self.root / 'home')['partial'])

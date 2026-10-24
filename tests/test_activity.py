@@ -1,4 +1,5 @@
 import copy
+from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor
 import json
 import os
@@ -40,7 +41,7 @@ class ActivityTests(unittest.TestCase):
         return [json.loads(row) for row in result.stdout.splitlines()]
 
     def cached_state(self):
-        with sqlite3.connect(self.state / 'activity.sqlite3') as db:
+        with closing(sqlite3.connect(self.state / 'activity.sqlite3')) as db:
             return json.loads(db.execute('SELECT body FROM sessions').fetchone()[0])
 
     def test_file_targets_keep_only_sanitized_basename(self):
@@ -99,6 +100,22 @@ class ActivityTests(unittest.TestCase):
         self.assertNotIn('Stale fallback', result.stdout)
         task.unlink()
         self.assertNotIn('TASKS', self.run_cli('--plain', payload).stdout)
+
+    def test_invalid_explicit_agent_identity_never_becomes_main_activity(self):
+        self.hook('PreToolUse', agent='@main', tool_name='Read', tool_use_id='main-call',
+                  tool_input={'file_path': '/tmp/main.py'})
+        for invalid in [None, '', [], ['child'], 1, 'x' * 257, '\ud800']:
+            self.hook('PreToolUse', agent=invalid, tool_name='Read', tool_use_id='child-call',
+                      tool_input={'file_path': '/tmp/child.py'})
+        pending = self.cached_state()['agents']['@main']['pending']
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(next(iter(pending.values()))['target'], 'main.py')
+
+    def test_absent_agent_identity_still_means_main(self):
+        result = self.run_cli('--hook', {'session_id': 'fixture-session', 'hook_event_name': 'PreToolUse',
+            'tool_name': 'Read', 'tool_use_id': 'main-call', 'tool_input': {'file_path': '/tmp/main.py'}})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('@main', self.cached_state()['agents'])
 
     def test_native_jsonl_preserves_ids_and_reported_states(self):
         rows = self.rows()
@@ -186,8 +203,9 @@ class ActivityTests(unittest.TestCase):
 
     def test_expired_cache_is_not_shown(self):
         self.hook('PreToolUse', tool_name='Bash', tool_use_id='call-1')
-        with sqlite3.connect(self.state / 'activity.sqlite3') as db:
+        with closing(sqlite3.connect(self.state / 'activity.sqlite3')) as db:
             db.execute('UPDATE sessions SET updated_at = 1')
+            db.commit()
         self.assertNotIn('awaiting result', self.rows()[0]['content'])
 
     def test_native_width_applies_to_every_content_line(self):

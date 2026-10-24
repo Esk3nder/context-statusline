@@ -11,6 +11,7 @@ import stat
 import unicodedata
 
 MAX_JSON = 65536
+MAX_CONFIG_JSON = 1024 * 1024
 MAX_TASKS = 256
 MAX_ENTRIES = 2000
 
@@ -26,7 +27,7 @@ def config_root():
     return Path(os.environ.get('CLAUDE_CONFIG_DIR') or str(Path.home() / '.claude')).expanduser()
 
 
-def read_object(path):
+def read_object(path, maximum=MAX_JSON):
     """Return (object, invalid); missing optional files are not errors."""
     try:
         fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
@@ -37,10 +38,10 @@ def read_object(path):
     try:
         with os.fdopen(fd, 'rb') as stream:
             info = os.fstat(stream.fileno())
-            if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_JSON:
+            if not stat.S_ISREG(info.st_mode) or info.st_size > maximum:
                 return None, True
-            raw = stream.read(MAX_JSON + 1)
-        if len(raw) > MAX_JSON:
+            raw = stream.read(maximum + 1)
+        if len(raw) > maximum:
             return None, True
         value = json.loads(raw)
         return (value, False) if isinstance(value, dict) else (None, True)
@@ -52,13 +53,20 @@ def task_snapshot(session_id, config_dir=None, list_id=None):
     result = {'available': False, 'partial': False, 'tasks': []}
     selected = list_id if list_id is not None else os.environ.get('CLAUDE_CODE_TASK_LIST_ID') or session_id
     if not isinstance(selected, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,255}', selected):
+        result['partial'] = selected is not None
         return result
     root = Path(config_dir) if config_dir is not None else config_root()
     directory = root / 'tasks' / selected
     try:
         if any(path.is_symlink() for path in (root, root / 'tasks', directory)):
+            result['partial'] = True
             return result
-        if not directory.is_dir():
+        try:
+            info = directory.stat()
+        except FileNotFoundError:
+            return result
+        if not stat.S_ISDIR(info.st_mode):
+            result['partial'] = True
             return result
         result['available'] = True
         paths = []
@@ -138,20 +146,29 @@ def config_snapshot(cwd, config_dir=None, home=None):
             result['partial'] = True
 
     def settings(path):
-        value, invalid = read_object(path)
+        value, invalid = read_object(path, MAX_CONFIG_JSON)
         result['partial'] |= invalid
         if value is None:
             return
         mcp = value.get('mcpServers')
         if isinstance(mcp, dict):
-            servers.update(name for name in mcp if isinstance(name, str))
+            servers.update(name for name, entry in mcp.items() if isinstance(entry, dict))
+            result['partial'] |= any(not isinstance(entry, dict) for entry in mcp.values())
+        elif 'mcpServers' in value:
+            result['partial'] = True
         configured_hooks = value.get('hooks')
         if isinstance(configured_hooks, dict):
-            hooks.update(configured_hooks)
+            hooks.update(name for name, groups in configured_hooks.items() if isinstance(groups, list))
+            result['partial'] |= any(not isinstance(groups, list) for groups in configured_hooks.values())
+        elif 'hooks' in value:
+            result['partial'] = True
         for field in ('disabledMcpServers', 'disabledMcpjsonServers'):
             names = value.get(field)
             if isinstance(names, list):
                 disabled.update(name for name in names if isinstance(name, str))
+                result['partial'] |= any(not isinstance(name, str) for name in names)
+            elif field in value:
+                result['partial'] = True
 
     count_file(root / 'CLAUDE.md', 'instructions')
     count_file(root / 'CLAUDE.local.md', 'instructions')

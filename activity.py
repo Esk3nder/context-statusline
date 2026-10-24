@@ -104,9 +104,9 @@ def observe(data, now=None):
             state = {}
         state['version'] = 2
         agents = state.setdefault('agents', {})
-        agent_id = data.get('agent_id') or '@main'
-        if not isinstance(agent_id, str) or len(agent_id) > 256:
-            agent_id = '@main'
+        agent_id = data['agent_id'] if 'agent_id' in data else '@main'
+        if key(agent_id) is None:
+            return  # An invalid explicit child identity must never become main activity.
         record = agents.setdefault(agent_id, {})
         record.update(last=now, event=event)
         # Only selected labels below cross the input boundary; never retain raw payloads.

@@ -247,7 +247,7 @@ def pending_detail(record, now):
 def checklist(state, snapshot):
     native = obj(snapshot.get('tasks'))
     main = obj(obj(state.get('agents')).get('@main'))
-    if native.get('available'):
+    if native.get('available') or native.get('partial'):
         tasks, partial = native.get('tasks'), bool(native.get('partial'))
     else:
         tasks, partial = main.get('todos'), bool(main.get('todos_partial')) or bool(native.get('partial'))
