@@ -130,6 +130,12 @@ def metrics(data, now):
         reset = number(window.get('resets_at'))
         if usage is not None and (reset is None or reset > now):
             windows.append((usage, label, reset))
+    for raw in obj(data.get('rate_limits')).get('windows', [])[:16]:
+        window = obj(raw)
+        usage = number(window.get('used_percentage'), maximum=100)
+        reset = number(window.get('resets_at'))
+        if usage is not None and (reset is None or reset > now):
+            windows.append((usage, clean(window.get('label') or 'QUOTA'), reset))
     quota = max(windows, key=lambda entry: entry[0]) if windows else (None, 'QUOTA', None)
     return pct, left, number(obj(data.get('cost')).get('total_cost_usd')), quota
 
@@ -189,7 +195,7 @@ def identity(data, width):
         extra += ' · fast'
     duration = number(obj(data.get('cost')).get('total_duration_ms'))
     if duration is not None:
-        extra += ' · ' + elapsed(duration / 1000) + ' session'
+        extra += ' · ' + elapsed(duration / 1000) + ' ' + clean(data.get('duration_label') or 'session')
     right = [segment(model), segment(extra, 'muted')]
     branch = clean(obj(data.get('worktree')).get('branch'))
     cwd = workspace.get('current_dir') or data.get('cwd')
@@ -308,6 +314,11 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
     if config:
         summary = (f"{config.get('instructions', 0)} CLAUDE.md · {config.get('rules', 0)} rules · "
                    f"{config.get('mcps', 0)} MCPs configured · {config.get('hooks', 0)} hook events")
+        if data.get('host') == 'codex':
+            labels = [('instructions', 'AGENTS.md discovered'), ('mcps', 'MCPs configured'),
+                      ('hooks', 'hook events'), ('skills', 'skills discovered')]
+            summary = ' · '.join(f'{config[key]:g} {label}' for key, label in labels
+                                 if number(config.get(key)) is not None)
         meta += [segment(('    ' if meta else '') + summary, 'dim')]
     if meta:
         rows += wrap_parts(meta, width, 2)
@@ -315,7 +326,7 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
     quota_label = f'{label} QUOTA USED' if usage is not None else 'QUOTA'
     instruments = [('CONTEXT USED', pct, pct_text, room, True),
                    (quota_label, usage, quota_text, reset_text, False),
-                   ('EST. COST', None, price, 'session estimate', False)]
+                   ('EST. COST', None, price, clean(data.get('cost_label') or 'session estimate'), False)]
     count = 3 if width >= 100 else 2 if width >= 60 else 1
     col = width // count
     for index in range(0, 3, count):
