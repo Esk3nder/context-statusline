@@ -1,0 +1,13 @@
+context-statusline / instrument-panel                                                               Opus · high · 18m42s session
+~/dev/context-statusline    2 CLAUDE.md · 8 rules · 6 MCPs configured · hooks on 4 events
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+CONTEXT USED                              5H QUOTA USED                             SESSION COST
+█████████████▊░░░░░░░░░░░░░░░░░░░░░░░     ████████▏░░░░░░░░░░░░░░░░░░░░░░░░░░░░     $0.50
+37% · 126k left                           22% · reset 2h10m                         estimate
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+MAIN    Read context_statusline.py · awaiting result · 3s
+TASKS   2/5  ✓ Inspect the existing renderer · ✓ Research statusline projects
+             ▸ Add task and activity panels · □ Verify main-session and subagent data · □ Update README and examples
+USED    skills: brainstorming, test-driven-development · MCP: context7
+AGENTS  reviewer running · 3m12s · Read test_statusline.py · awaiting result · 7s
+        researcher completed · 1m40s
