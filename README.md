@@ -92,7 +92,37 @@ Diagnostics expose normalized metrics, observer evidence, used capability names 
 
 ## Codex
 
-Codex CLI's native `/statusline` picker selects built-in footer items; it does not execute this renderer. Configure its native model, context, account-limit and Git fields separately. This package does not modify Codex settings or add a custom footer to the Codex desktop app.
+The shared wide design runs **inside our patched Codex CLI**, based on upstream **0.164.0**. No new terminal, pane arrangement or upstream extension approval is needed. Stock Codex's `/statusline` picker still supports only its own built-in fields; it does not provide this renderer bridge. This does not customize the Codex desktop app.
+
+Install a trusted, platform-matching bundle produced by the **Native Codex bundle** workflow, or build one locally. Python **3.10+** must be available on the target computer. Bundles contain the patched Codex binary, its helper binaries, the shared renderer, upstream license/notices and a SHA-256 file manifest. Artifact checksums verify integrity, not the publisher's identity; use a bundle from a build/source you trust.
+
+```bash
+python3 install_codex.py /path/to/codex-statusline-bundle
+~/.local/bin/codex-statusline
+```
+
+On Windows, use `python` and run `%USERPROFILE%\.local\bin\codex-statusline.cmd`. Add that `bin` directory to your PATH if needed. Setup installs immutable versioned bundles under `~/.local/lib/context-statusline/versions/` and creates only the named `codex-statusline` launcher. It preserves stock `codex`, auth, existing hooks and Auto-managed status settings. It refuses edited/unowned launchers, unsafe bundle paths, symlinks in managed locations and checksum mismatches. Global Codex configuration and credentials are not copied or rewritten. CLI arguments are forwarded to the bundled Codex.
+
+```bash
+python3 install_codex.py --rollback
+python3 install_codex.py --uninstall
+```
+
+Rollback activates the preceding verified bundle. Uninstall removes the owned launcher and retains bundles for recovery; it never removes stock Codex. A custom `--prefix` works with all three installer operations.
+
+Native context uses the latest active context count, not cumulative session tokens. Quota labels reflect the actual window duration. The plan/checklist comes from native plan updates. Main/known-child tool calls are correlated by thread and item IDs; no shell commands, arguments, results or agent messages go to the renderer. Subagent states are the latest supplied native observations, not inferred progress. Supplied costs are **direct-thread estimates**; elapsed time is explicitly **since attachment**. Missing cost/config data stays unavailable or is omitted. Only known configured MCP counts are currently supplied; instruction/rule/hook/skill counts are omitted when unavailable. Codex never reads Claude task files, configuration or observer state.
+
+The TUI patch is opt-in through `CODEX_STATUSLINE_COMMAND`, a JSON array of executable/argv entries set by the launcher. It uses no shell expansion. At most one renderer runs per widget, at most twice per second, with a 500ms timeout and 64 KiB output cap. Output is converted into styled cells with terminal control sequences removed. A 64-row display bound is disclosed when clipping. Renderer errors leave native Codex usable; dialogs and input take layout priority. We do not alter the backend, model context, permissions, approval behavior or agent tools.
+
+To reproduce a source build, install the pinned Rust 1.99.1 toolchain and native build dependencies, then:
+
+```bash
+python3 codex/build.py --source /path/to/fresh-source --output /path/to/new-bundle
+```
+
+`codex/upstream.json` pins the upstream commit, feature-patch checksum and resulting source-file checksums. The build verifies/applies only our TUI patch. Upstream release tags retain development workspace versions in Cargo.lock; the script normalizes those workspace version fields without changing dependency revisions. `--check` verifies/prepares source without compiling; `--profile dev` makes a local development bundle. CI builds native macOS ARM64, Linux x86-64 and Windows x86-64 artifacts. Other architectures need separate builds. These are test artifacts, not notarized public macOS releases; signing/notarization and a stable release channel remain distribution work.
+
+Our maintenance is the renderer/adapters plus the bounded TUI patch. For an upstream update: select a new pinned release, apply the patch, review any conflict, run adapter/installer/TUI tests, build each supported platform and publish a new bundle only after validation. A failed upgrade keeps the previous installed version available. Stock Codex updates do not update our independently installed bundle.
 
 ## Upgrade and rollback
 

@@ -76,6 +76,29 @@ class CodexTests(unittest.TestCase):
             self.assertNotIn('\x1b', text)
             self.assertTrue(all(cell_width(line) <= width for line in text.splitlines()))
 
+    def test_child_activity_with_same_call_id_stays_on_child_row(self):
+        data = copy.deepcopy(PAYLOAD)
+        data['agents'][0]['tools'] = [{'id': 'call-1', 'tool': 'Edit', 'target': '/tmp/child.py', 'at': NOW-5}]
+        data['agents'][0]['status'] = 'errored'
+        text = self.render(data)
+        child = next(line for line in text.splitlines() if 'reviewer' in line)
+        main = next(line for line in text.splitlines() if 'MAIN' in line)
+        self.assertIn('Read main.py', main)
+        self.assertNotIn('child.py', main)
+        self.assertIn('failed', child)
+        # Failed agents must not retain an active pending-result indicator.
+        self.assertNotIn('awaiting result', child)
+        data['agents'][0]['status'] = 'running'
+        self.assertIn('Edit child.py', self.render(data))
+
+    def test_large_plan_discloses_display_budget_and_keeps_output_bounded(self):
+        data = copy.deepcopy(PAYLOAD)
+        data['plan'] = [{'step': 'Long task ' + 'x' * 500, 'status': 'pending'} for _ in range(256)]
+        text = self.render(data, width=128, color=True)
+        self.assertLessEqual(len(text.splitlines()), 64)
+        self.assertLessEqual(len(text.encode()), 65536)
+        self.assertIn('clipped', text)
+
     def test_cli_consumes_versioned_snapshot_without_writing_state(self):
         result = subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1]/'codex_statusline.py'), '--plain'],
             input=json.dumps(PAYLOAD), text=True, capture_output=True, timeout=5)

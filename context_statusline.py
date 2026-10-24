@@ -130,7 +130,8 @@ def metrics(data, now):
         reset = number(window.get('resets_at'))
         if usage is not None and (reset is None or reset > now):
             windows.append((usage, label, reset))
-    for raw in obj(data.get('rate_limits')).get('windows', [])[:16]:
+    extra_windows = obj(data.get('rate_limits')).get('windows')
+    for raw in (extra_windows[:16] if isinstance(extra_windows, list) else []):
         window = obj(raw)
         usage = number(window.get('used_percentage'), maximum=100)
         reset = number(window.get('resets_at'))

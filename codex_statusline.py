@@ -15,6 +15,19 @@ def bounded_list(value, limit=256):
     return value[:limit] if isinstance(value, list) else []
 
 
+def observed_tools(raw, now):
+    record = {'last': now, 'pending': {}}
+    for value in bounded_list(raw, 64):
+        tool = obj(value)
+        identifier, name = clean(tool.get('id')), clean(tool.get('tool'))
+        at = number(tool.get('at'))
+        if identifier and name and at is not None:
+            target = clean(tool.get('target')).replace('\\', '/')
+            record['pending'][identifier] = {'tool': name, 'at': at,
+                'target': PurePosixPath(target).name if target else ''}
+    return record
+
+
 def render_codex(payload, width=80, color=True, now=None):
     now = time.time() if now is None else now
     width = max(1, min(1000, width))
@@ -59,15 +72,7 @@ def render_codex(payload, width=80, color=True, now=None):
     config = obj(payload.get('configuration'))
     snapshot['config'] = {key: number(config.get(key)) for key in ['instructions', 'mcps', 'hooks', 'skills']
                           if number(config.get(key)) is not None}
-    state = {'agents': {'@main': {'last': now, 'pending': {}}}}
-    for raw in bounded_list(payload.get('tools'), 64):
-        tool = obj(raw)
-        identifier, name = clean(tool.get('id')), clean(tool.get('tool'))
-        at = number(tool.get('at'))
-        if identifier and name and at is not None:
-            target = clean(tool.get('target')).replace('\\', '/')
-            state['agents']['@main']['pending'][identifier] = {'tool': name, 'at': at,
-                'target': PurePosixPath(target).name if target else ''}
+    state = {'agents': {'@main': observed_tools(payload.get('tools'), now)}}
     used_caps = obj(payload.get('used'))
     state['used'] = {key: [clean(value) for value in bounded_list(used_caps.get(key), 32) if isinstance(value, str)]
                      for key in ['skills', 'mcps']}
@@ -77,14 +82,26 @@ def render_codex(payload, width=80, color=True, now=None):
         item = obj(raw)
         if not clean(item.get('id')):
             continue
-        agents.append({'id': clean(item.get('id')), 'agentType': clean(item.get('role')) or 'agent',
-                       'status': clean(item.get('status')) or 'unknown'})
-    for row in render_subagents({'tasks': agents}, width, color, now=now).splitlines():
+        identifier = clean(item.get('id'))
+        status = clean(item.get('status'))
+        status = {'errored': 'failed', 'interrupted': 'killed', 'pendingInit': 'pending'}.get(status, status)
+        state['agents'][identifier] = observed_tools(item.get('tools'), now)
+        agents.append({'id': identifier, 'agentType': clean(item.get('role')) or 'agent',
+                       'status': status or 'unknown'})
+    for row in render_subagents({'tasks': agents}, width, color, now=now, state=state).splitlines():
         text += json.loads(row)['content'] + '\n'
     if payload.get('partial') is True:
         text += '\n'.join(paint(row, width, color, False) for row in wrap_parts(
             [segment(' ! Codex metadata incomplete', 'warn')], width)) + '\n'
-    return text
+    rows, size = [], 0
+    for line in text.splitlines():
+        encoded = len(line.encode('utf-8')) + 1
+        if len(rows) >= 63 or size + encoded > 48 * 1024:
+            rows.append(paint([segment(' ! Statusline clipped · bounded display', 'warn')], width, color, False))
+            break
+        rows.append(line)
+        size += encoded
+    return '\n'.join(rows) + '\n'
 
 
 def main():

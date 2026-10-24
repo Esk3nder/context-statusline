@@ -22,6 +22,6 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: bash -n context-bar.sh
-      - run: python -m py_compile context_statusline.py activity.py session_snapshot.py
+      - run: python -m py_compile context_statusline.py activity.py session_snapshot.py codex_statusline.py install_codex.py launch_codex.py codex/build.py
       - run: python -m unittest discover -s tests -v
       - run: python docs/examples/render.py && git diff --exit-code -- docs/examples

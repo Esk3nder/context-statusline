@@ -1,0 +1,809 @@
+diff --git a/codex-rs/tui/src/app/app_server_events.rs b/codex-rs/tui/src/app/app_server_events.rs
+index cd8f1678d..4ae3d6564 100644
+--- a/codex-rs/tui/src/app/app_server_events.rs
++++ b/codex-rs/tui/src/app/app_server_events.rs
+@@ -269,6 +269,7 @@ impl App {
+                 .entry(thread_id)
+                 .or_default();
+         }
++        self.chat_widget.observe_custom_statusline(&notification);
+         self.track_agents_overview_notification(&notification);
+         // Retained blank sessions stay subscribed after their event channels are cleared.
+         if let ServerNotification::ThreadSettingsUpdated(settings) = &notification
+diff --git a/codex-rs/tui/src/chatwidget.rs b/codex-rs/tui/src/chatwidget.rs
+index 4b9d285d2..903cde49b 100644
+--- a/codex-rs/tui/src/chatwidget.rs
++++ b/codex-rs/tui/src/chatwidget.rs
+@@ -261,6 +261,7 @@ mod config_panel;
+ mod connector_mentions;
+ mod connectors;
+ mod constructor;
++mod context_statusline;
+ mod dynamic_activity;
+ mod empty_state_policy;
+ pub(crate) use self::connectors::ConnectorScopeGeneration;
+@@ -520,6 +521,7 @@ pub(crate) enum ExternalEditorState {
+ /// (which view gets Ctrl+C), while `ChatWidget` owns process-level decisions such as interrupting
+ /// active work, arming the double-press quit shortcut, and requesting shutdown-first exit.
+ pub(crate) struct ChatWidget {
++    custom_statusline: Option<crate::context_statusline::Panel>,
+     pub(crate) empty_state_animation:
+         std::cell::RefCell<crate::empty_state_animation::EmptyStateAnimation>,
+     pub(crate) daybreak_enabled: bool,
+diff --git a/codex-rs/tui/src/chatwidget/constructor.rs b/codex-rs/tui/src/chatwidget/constructor.rs
+index 8d4bbbd18..fb82527e3 100644
+--- a/codex-rs/tui/src/chatwidget/constructor.rs
++++ b/codex-rs/tui/src/chatwidget/constructor.rs
+@@ -102,6 +102,7 @@ impl ChatWidget {
+             app_event_tx: app_event_tx.clone(),
+             frame_requester: frame_requester.clone(),
+             codex_op_target,
++            custom_statusline: crate::context_statusline::Panel::from_env(frame_requester.clone()),
+             bottom_pane: BottomPane::new(BottomPaneParams {
+                 frame_requester,
+                 app_event_tx,
+diff --git a/codex-rs/tui/src/chatwidget/context_statusline.rs b/codex-rs/tui/src/chatwidget/context_statusline.rs
+new file mode 100644
+index 000000000..f9615edf3
+--- /dev/null
++++ b/codex-rs/tui/src/chatwidget/context_statusline.rs
+@@ -0,0 +1,43 @@
++//! Snapshot only allowlisted native fields for the optional external panel.
++use super::*;
++use serde_json::json;
++
++impl ChatWidget {
++    pub(crate) fn observe_custom_statusline(&self, notification: &ServerNotification) {
++        if let Some(panel) = &self.custom_statusline {
++            panel.observe(notification, self.thread_id.map(|id| id.to_string()));
++        }
++    }
++
++    pub(super) fn refresh_custom_statusline(&self) {
++        let Some(panel) = &self.custom_statusline else {
++            return;
++        };
++        let context = self
++            .token_info
++            .as_ref()
++            .filter(|_| !self.token_usage_pending)
++            .map(|info| {
++                json!({
++                    "used_tokens": info.last_token_usage.total_tokens,
++                    "window_tokens": info.model_context_window
++                })
++            });
++        panel.update(json!({
++            "schema_version": 1, "host":"codex", "session_id":self.thread_id,
++            "model":self.current_model(), "effort":self.current_reasoning_effort(),
++            "cwd":self.config.cwd, "branch":self.status_line_branch,
++            "context":context,
++            "estimated_thread_cost_usd": self.thread_usage.estimate.as_ref().and_then(|usage|
++                usage.estimated_usage_usd_micros.map(|cost| cost as f64 / 1_000_000.0)),
++            "configuration":{"mcps": self.config.mcp_servers.get().len()},
++            "agent_roles": self.collab_agent_metadata.iter().take(64).map(|(id, meta)|
++                (id.to_string(), meta.agent_role.as_deref().or(meta.agent_nickname.as_deref()).unwrap_or("agent"))
++            ).collect::<std::collections::BTreeMap<_,_>>()
++        }));
++    }
++}
++
++#[cfg(test)]
++#[path = "context_statusline_tests.rs"]
++mod tests;
+diff --git a/codex-rs/tui/src/chatwidget/context_statusline_tests.rs b/codex-rs/tui/src/chatwidget/context_statusline_tests.rs
+new file mode 100644
+index 000000000..38e42ea23
+--- /dev/null
++++ b/codex-rs/tui/src/chatwidget/context_statusline_tests.rs
+@@ -0,0 +1,68 @@
++use super::*;
++use crate::chatwidget::tests::make_chatwidget_manual_with_sender;
++use crate::context_statusline::Panel;
++use pretty_assertions::assert_eq;
++use tempfile::tempdir;
++
++#[tokio::test]
++async fn embedded_panel_preserves_composer_and_disappears_before_input_when_short() {
++    let (mut widget, _, _, _) = make_chatwidget_manual_with_sender().await;
++    let dir = tempdir().unwrap();
++    let script = dir.path().join("renderer.py");
++    std::fs::write(&script, "print('CUSTOM CONTEXT 37%\\nCUSTOM QUOTA 22%')").unwrap();
++    widget.custom_statusline = Some(Panel::new(
++        vec![
++            if cfg!(windows) {
++                "python".into()
++            } else {
++                "python3".into()
++            },
++            script.to_string_lossy().into(),
++        ],
++        widget.frame_requester.clone(),
++    ));
++    widget.refresh_custom_statusline();
++    widget.handle_paste("draft stays here".into());
++    let options = crate::bottom_pane::ComposerRenderOptions::default;
++    for _ in 0..100 {
++        let bottom = widget.bottom_pane_renderable(options());
++        bottom.desired_height(80);
++        let mut buffer = ratatui::buffer::Buffer::empty(Rect::new(0, 0, 80, 12));
++        bottom.render(buffer.area, &mut buffer);
++        let text = buffer
++            .content
++            .iter()
++            .map(ratatui::buffer::Cell::symbol)
++            .collect::<String>();
++        if text.contains("CUSTOM CONTEXT") {
++            assert!(text.contains("draft stays here"));
++            let rendered = buffer
++                .content
++                .chunks(80)
++                .map(|row| {
++                    row.iter()
++                        .map(ratatui::buffer::Cell::symbol)
++                        .collect::<String>()
++                        .trim_end()
++                        .to_owned()
++                })
++                .collect::<Vec<_>>()
++                .join("\n")
++                .replace(&widget.config.cwd.display().to_string(), "/tmp/project");
++            insta::assert_snapshot!(rendered);
++            let mut tiny = ratatui::buffer::Buffer::empty(Rect::new(0, 0, 80, 3));
++            bottom.render(tiny.area, &mut tiny);
++            let tiny_text = tiny
++                .content
++                .iter()
++                .map(ratatui::buffer::Cell::symbol)
++                .collect::<String>();
++            assert!(tiny_text.contains("draft stays here"));
++            assert!(!tiny_text.contains("CUSTOM CONTEXT"));
++            assert_eq!(bottom.cursor_pos(tiny.area).is_some(), true);
++            return;
++        }
++        tokio::time::sleep(Duration::from_millis(10)).await;
++    }
++    panic!("Custom renderer output was not embedded in the composer layout");
++}
+diff --git a/codex-rs/tui/src/chatwidget/protocol.rs b/codex-rs/tui/src/chatwidget/protocol.rs
+index 5bd2254d8..bc910a910 100644
+--- a/codex-rs/tui/src/chatwidget/protocol.rs
++++ b/codex-rs/tui/src/chatwidget/protocol.rs
+@@ -20,6 +20,7 @@ impl ChatWidget {
+         {
+             return;
+         }
++        self.observe_custom_statusline(&notification);
+         let was_replaying_turn_completion = self.thread_usage.replaying_turn_completion;
+         if replay_kind.is_some()
+             || matches!(
+diff --git a/codex-rs/tui/src/chatwidget/rendering.rs b/codex-rs/tui/src/chatwidget/rendering.rs
+index 15bbdad9d..4995f06e8 100644
+--- a/codex-rs/tui/src/chatwidget/rendering.rs
++++ b/codex-rs/tui/src/chatwidget/rendering.rs
+@@ -258,6 +258,16 @@ impl ChatWidget {
+             options.separate_status_line = options.command_popup_placement
+                 != crate::bottom_pane::CommandPopupPlacement::AboveComposer;
+             let bottom_pane = self.bottom_pane.backdrop_with_options(options);
++            let bottom_pane = if let Some(panel) = &self.custom_statusline
++                && !self.bottom_pane.has_active_view()
++            {
++                let mut column = FlexRenderable::new();
++                column.push(/*flex*/ 0, bottom_pane);
++                column.push(/*flex*/ 1, RenderableItem::Borrowed(panel));
++                RenderableItem::Owned(Box::new(column))
++            } else {
++                bottom_pane
++            };
+             if !self.quick_dial_menu {
+                 return bottom_pane;
+             }
+diff --git a/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap b/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap
+new file mode 100644
+index 000000000..77d343e1d
+--- /dev/null
++++ b/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap
+@@ -0,0 +1,10 @@
++---
++source: tui/src/chatwidget/context_statusline_tests.rs
++expression: rendered
++---
++
++› draft stays here
++
++  GPT-5.6-Sol default · /tmp/project
++CUSTOM CONTEXT 37%
++CUSTOM QUOTA 22%
+diff --git a/codex-rs/tui/src/chatwidget/status_surfaces.rs b/codex-rs/tui/src/chatwidget/status_surfaces.rs
+index d7340e543..e115219a9 100644
+--- a/codex-rs/tui/src/chatwidget/status_surfaces.rs
++++ b/codex-rs/tui/src/chatwidget/status_surfaces.rs
+@@ -193,7 +193,7 @@ impl ChatWidget {
+             self.request_status_line_workspace_headline_if_due(Instant::now());
+         }
+ 
+-        if selections.uses_thread_usage() {
++        if selections.uses_thread_usage() || self.custom_statusline.is_some() {
+             self.ensure_thread_usage_requested();
+         } else {
+             self.cancel_thread_usage_polling();
+@@ -300,6 +300,7 @@ impl ChatWidget {
+     /// warnings once, synchronizes shared cached state (such as git-branch
+     /// lookup), then renders each surface from that shared snapshot.
+     pub(crate) fn refresh_status_surfaces(&mut self) {
++        self.refresh_custom_statusline();
+         self.bottom_pane
+             .set_luna_reserve_active(self.current_model() == LUNA_RESERVE_MODEL);
+         let selections = self.status_surface_selections();
+diff --git a/codex-rs/tui/src/chatwidget/thread_usage.rs b/codex-rs/tui/src/chatwidget/thread_usage.rs
+index 9907aa1c6..6515cdb06 100644
+--- a/codex-rs/tui/src/chatwidget/thread_usage.rs
++++ b/codex-rs/tui/src/chatwidget/thread_usage.rs
+@@ -37,7 +37,7 @@ struct SelectedThreadUsage {
+ #[derive(Debug, Default)]
+ pub(super) struct ThreadUsageState {
+     thread_id: Option<ThreadId>,
+-    estimate: Option<ThreadUsage>,
++    pub(super) estimate: Option<ThreadUsage>,
+     pending_request_id: Option<u64>,
+     next_request_id: u64,
+     requested: bool,
+diff --git a/codex-rs/tui/src/context_statusline.rs b/codex-rs/tui/src/context_statusline.rs
+new file mode 100644
+index 000000000..b5c43604e
+--- /dev/null
++++ b/codex-rs/tui/src/context_statusline.rs
+@@ -0,0 +1,392 @@
++//! Opt-in external status panel. Model behavior, persistence and native config stay unchanged.
++use crate::render::renderable::Renderable;
++use crate::tui::FrameRequester;
++use codex_app_server_protocol::ServerNotification;
++use codex_app_server_protocol::ThreadItem;
++use ratatui::buffer::Buffer;
++use ratatui::layout::Rect;
++use ratatui::text::Line;
++use ratatui::widgets::Paragraph;
++use serde_json::Value;
++use serde_json::json;
++use std::collections::BTreeMap;
++use std::collections::BTreeSet;
++use std::process::Stdio;
++use std::sync::Arc;
++use std::sync::Mutex;
++use std::time::Duration;
++use std::time::Instant;
++use tokio::io::AsyncReadExt;
++use tokio::io::AsyncWriteExt;
++
++const INTERVAL: Duration = Duration::from_millis(500);
++const MAX_OUTPUT: u64 = 65536;
++
++#[derive(Default)]
++struct Inner {
++    payload: Value,
++    plan: Vec<Value>,
++    tools: BTreeMap<String, Value>,
++    agents: BTreeMap<String, Value>,
++    limits: Vec<Value>,
++    used_mcps: BTreeSet<String>,
++    lines: Vec<Line<'static>>,
++    width: u16,
++    generation: u64,
++    pending: bool,
++    last_started: Option<Instant>,
++    partial: bool,
++}
++
++pub(crate) struct Panel {
++    command: Vec<String>,
++    inner: Arc<Mutex<Inner>>,
++    frame: FrameRequester,
++    attached: Instant,
++}
++
++impl Panel {
++    pub(crate) fn from_env(frame: FrameRequester) -> Option<Self> {
++        let raw = std::env::var("CODEX_STATUSLINE_COMMAND").ok()?;
++        let command: Vec<String> = serde_json::from_str(&raw).ok()?;
++        if command.is_empty()
++            || command.len() > 16
++            || command
++                .iter()
++                .any(|arg| arg.len() > 4096 || arg.contains('\0'))
++        {
++            return None;
++        }
++        Some(Self::new(command, frame))
++    }
++
++    pub(crate) fn new(command: Vec<String>, frame: FrameRequester) -> Self {
++        Self {
++            command,
++            inner: Arc::default(),
++            frame,
++            attached: Instant::now(),
++        }
++    }
++
++    pub(crate) fn update(&self, mut payload: Value) {
++        let mut inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        if inner.payload["session_id"] != payload["session_id"] {
++            inner.plan.clear();
++            inner.tools.clear();
++            inner.agents.clear();
++            inner.lines.clear();
++            inner.used_mcps.clear();
++            inner.partial = false;
++            inner.generation += 1;
++        }
++        payload["attached_ms"] = json!(self.attached.elapsed().as_millis() as u64);
++        inner.payload = payload;
++    }
++
++    pub(crate) fn observe(&self, notification: &ServerNotification, active: Option<String>) {
++        let mut inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        match notification {
++            ServerNotification::TurnPlanUpdated(n) if Some(&n.thread_id) == active.as_ref() => {
++                inner.partial |= n.plan.len() > 256;
++                inner.plan = n
++                    .plan
++                    .iter()
++                    .take(256)
++                    .map(|step| json!({"step":label(&step.step),"status":step.status}))
++                    .collect();
++            }
++            ServerNotification::ItemStarted(n)
++                if Some(&n.thread_id) == active.as_ref()
++                    || inner.agents.contains_key(&n.thread_id) =>
++            {
++                observe_item(
++                    &mut inner,
++                    &n.item,
++                    false,
++                    &n.thread_id,
++                    n.started_at_ms as f64 / 1000.0,
++                );
++            }
++            ServerNotification::ItemCompleted(n)
++                if Some(&n.thread_id) == active.as_ref()
++                    || inner.agents.contains_key(&n.thread_id) =>
++            {
++                observe_item(&mut inner, &n.item, true, &n.thread_id, 0.0);
++            }
++            ServerNotification::TurnCompleted(n)
++                if Some(&n.thread_id) == active.as_ref()
++                    || inner.agents.contains_key(&n.thread_id) =>
++            {
++                inner
++                    .tools
++                    .retain(|_, tool| tool["agent_id"] != n.thread_id);
++            }
++            ServerNotification::AccountRateLimitsUpdated(n)
++                if n.rate_limits
++                    .limit_id
++                    .as_deref()
++                    .is_none_or(|id| id == "codex") =>
++            {
++                inner.limits = [&n.rate_limits.primary, &n.rate_limits.secondary].into_iter().flatten().map(|w| json!({
++                    "used_percent":w.used_percent,"window_minutes":w.window_duration_mins,"resets_at":w.resets_at
++                })).collect();
++            }
++            _ => {}
++        }
++    }
++
++    fn refresh(&self, width: u16) {
++        self.frame.schedule_frame_in(INTERVAL);
++        let mut inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        if inner.pending
++            || inner.last_started.is_some_and(|at| at.elapsed() < INTERVAL)
++            || self.command.is_empty()
++        {
++            return;
++        }
++        let mut payload = inner.payload.clone();
++        payload["columns"] = json!(width);
++        payload["attached_ms"] = json!(self.attached.elapsed().as_millis() as u64);
++        payload["plan"] = json!(inner.plan);
++        payload["tools"] = json!(
++            inner
++                .tools
++                .values()
++                .filter(|tool| tool["agent_id"] == payload["session_id"])
++                .collect::<Vec<_>>()
++        );
++        payload["agents"] = json!(
++            inner
++                .agents
++                .values()
++                .map(|agent| {
++                    let mut agent = agent.clone();
++                    agent["tools"] = json!(
++                        inner
++                            .tools
++                            .values()
++                            .filter(|tool| tool["agent_id"] == agent["id"])
++                            .collect::<Vec<_>>()
++                    );
++                    if let Some(role) =
++                        payload["agent_roles"].get(agent["id"].as_str().unwrap_or_default())
++                    {
++                        agent["role"] = role.clone();
++                    }
++                    agent
++                })
++                .collect::<Vec<_>>()
++        );
++        payload["used"] = json!({"mcps":inner.used_mcps});
++        payload["limits"] = json!(inner.limits);
++        payload["partial"] = json!(inner.partial);
++        let generation = inner.generation;
++        inner.pending = true;
++        inner.last_started = Some(Instant::now());
++        let state = Arc::downgrade(&self.inner);
++        let command = self.command.clone();
++        let frame = self.frame.clone();
++        tokio::spawn(async move {
++            let result = run_renderer(&command, payload).await;
++            if let Some(state) = state.upgrade() {
++                let mut state = state
++                    .lock()
++                    .unwrap_or_else(std::sync::PoisonError::into_inner);
++                state.pending = false;
++                if state.generation == generation {
++                    state.lines = result.unwrap_or_default();
++                    state.width = width;
++                }
++                frame.schedule_frame();
++            }
++        });
++    }
++}
++
++fn label(value: &str) -> String {
++    value
++        .chars()
++        .filter(|c| !c.is_control())
++        .take(512)
++        .collect()
++}
++
++fn observe_item(inner: &mut Inner, item: &ThreadItem, completed: bool, thread: &str, at: f64) {
++    let (id, tool) = match item {
++        ThreadItem::CommandExecution { id, .. } => (id, "Shell".to_owned()),
++        ThreadItem::FileChange { id, .. } => (id, "Edit".to_owned()),
++        ThreadItem::McpToolCall {
++            id,
++            server,
++            tool,
++            status,
++            ..
++        } => {
++            if completed
++                && *status == codex_app_server_protocol::McpToolCallStatus::Completed
++                && inner.used_mcps.len() < 32
++            {
++                inner.used_mcps.insert(label(server));
++            }
++            (id, format!("MCP {} {}", label(server), label(tool)))
++        }
++        ThreadItem::DynamicToolCall { id, tool, .. } => (id, label(tool)),
++        ThreadItem::CollabAgentToolCall {
++            id,
++            tool,
++            agents_states,
++            ..
++        } => {
++            for (agent_id, state) in agents_states.iter().take(64) {
++                if inner.agents.len() < 64 || inner.agents.contains_key(agent_id) {
++                    inner.agents.insert(
++                        label(agent_id),
++                        json!({"id":label(agent_id),"role":"agent","status":state.status}),
++                    );
++                } else {
++                    inner.partial = true;
++                }
++            }
++            (id, format!("{tool:?}"))
++        }
++        _ => return,
++    };
++    let key = format!("{thread}:{}", label(id));
++    if completed {
++        inner.tools.remove(&key);
++    } else if inner.tools.len() < 64 {
++        inner.tools.entry(key).or_insert_with(
++            || json!({"id":label(id),"tool":tool,"at":at,"agent_id":label(thread)}),
++        );
++    } else {
++        inner.partial = true;
++    }
++}
++
++impl Renderable for Panel {
++    fn render(&self, area: Rect, buf: &mut Buffer) {
++        let inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        if area.width == inner.width {
++            Renderable::render(&Paragraph::new(inner.lines.clone()), area, buf);
++        }
++    }
++    fn desired_height(&self, width: u16) -> u16 {
++        self.refresh(width);
++        let inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        if width == inner.width {
++            inner.lines.len() as u16
++        } else {
++            0
++        }
++    }
++}
++
++async fn run_renderer(command: &[String], payload: Value) -> Result<Vec<Line<'static>>, ()> {
++    let work = async {
++        let mut child = tokio::process::Command::new(command.first().ok_or(())?)
++            .args(&command[1..])
++            .stdin(Stdio::piped())
++            .stdout(Stdio::piped())
++            .stderr(Stdio::null())
++            .kill_on_drop(true)
++            .spawn()
++            .map_err(|_| ())?;
++        let raw = serde_json::to_vec(&payload).map_err(|_| ())?;
++        let mut stdin = child.stdin.take().ok_or(())?;
++        let mut stdout = child.stdout.take().ok_or(())?.take(MAX_OUTPUT + 1);
++        let writer = async {
++            stdin.write_all(&raw).await.map_err(|_| ())?;
++            drop(stdin);
++            Ok::<_, ()>(())
++        };
++        let reader = async {
++            let mut output = Vec::new();
++            stdout.read_to_end(&mut output).await.map_err(|_| ())?;
++            if output.len() as u64 > MAX_OUTPUT {
++                return Err(());
++            }
++            Ok(output)
++        };
++        let (_, output) = tokio::try_join!(writer, reader)?;
++        if !child.wait().await.map_err(|_| ())?.success() {
++            return Err(());
++        }
++        parse_output(&output)
++    };
++    tokio::time::timeout(INTERVAL, work).await.map_err(|_| ())?
++}
++
++fn parse_output(output: &[u8]) -> Result<Vec<Line<'static>>, ()> {
++    let text = std::str::from_utf8(output).map_err(|_| ())?;
++    // Only SGR styling survives. OSC, cursor controls, clipboard/title writes and C0 are discarded.
++    let mut safe = String::new();
++    let mut chars = text.chars().peekable();
++    while let Some(c) = chars.next() {
++        if c == '\x1b' {
++            match chars.next() {
++                Some('[') => {
++                    let mut sequence = String::new();
++                    for next in chars.by_ref() {
++                        if ('@'..='~').contains(&next) {
++                            if next == 'm'
++                                && sequence.len() <= 128
++                                && sequence
++                                    .chars()
++                                    .all(|c| c.is_ascii_digit() || c == ';' || c == ':')
++                            {
++                                safe.push_str(&format!("\x1b[{sequence}m"));
++                            }
++                            break;
++                        }
++                        if sequence.len() <= 128 {
++                            sequence.push(next);
++                        }
++                    }
++                }
++                Some(']' | 'P' | '_' | '^') => {
++                    let mut escaped = false;
++                    for next in chars.by_ref() {
++                        if next == '\x07' || (escaped && next == '\\') {
++                            break;
++                        }
++                        escaped = next == '\x1b';
++                    }
++                }
++                _ => {}
++            }
++        } else if c == '\n'
++            || (!c.is_control() && !matches!(c, '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}'))
++        {
++            safe.push(c);
++        }
++    }
++    let mut lines = codex_ansi_escape::ansi_escape(&safe).lines;
++    if lines.last().is_some_and(|line| line.width() == 0) {
++        lines.pop();
++    }
++    if lines.len() > 64 {
++        lines.truncate(63);
++        lines.push(" ! Statusline clipped at 64 rows".into());
++    }
++    Ok(lines)
++}
++
++#[cfg(test)]
++#[path = "context_statusline_tests.rs"]
++mod tests;
+diff --git a/codex-rs/tui/src/context_statusline_tests.rs b/codex-rs/tui/src/context_statusline_tests.rs
+new file mode 100644
+index 000000000..39c9ea619
+--- /dev/null
++++ b/codex-rs/tui/src/context_statusline_tests.rs
+@@ -0,0 +1,132 @@
++use super::*;
++use pretty_assertions::assert_eq;
++use ratatui::buffer::Buffer;
++use ratatui::layout::Rect;
++use tempfile::tempdir;
++
++#[tokio::test]
++async fn renderer_handles_argv_spaces_and_delivers_json_on_stdin() {
++    let dir = tempdir().unwrap();
++    let script = dir.path().join("renderer with spaces.py");
++    std::fs::write(&script, "import json,sys\nx=json.load(sys.stdin)\nprint('\\x1b[1mCTX ' + str(x['columns']) + '\\x1b[0m')\n").unwrap();
++    let result = run_renderer(
++        &[
++            if cfg!(windows) {
++                "python".into()
++            } else {
++                "python3".into()
++            },
++            script.to_string_lossy().into(),
++        ],
++        json!({"columns":80}),
++    )
++    .await
++    .unwrap();
++    assert_eq!(result[0].to_string(), "CTX 80");
++    assert!(
++        result[0].spans[0]
++            .style
++            .add_modifier
++            .contains(ratatui::style::Modifier::BOLD)
++    );
++}
++
++#[tokio::test]
++async fn renderer_failure_timeout_and_output_limit_are_bounded() {
++    for code in [
++        "raise SystemExit(2)",
++        "import time;time.sleep(10)",
++        "print('x'*70000)",
++    ] {
++        let started = Instant::now();
++        assert!(
++            run_renderer(
++                &[
++                    if cfg!(windows) {
++                        "python".into()
++                    } else {
++                        "python3".into()
++                    },
++                    "-c".into(),
++                    code.into()
++                ],
++                json!({})
++            )
++            .await
++            .is_err()
++        );
++        assert!(started.elapsed() < Duration::from_secs(3));
++    }
++}
++
++#[test]
++fn unsafe_terminal_sequences_are_removed_and_rows_are_capped() {
++    let rows = parse_output(b"\x1b]52;c;SECRET\x07safe\x1b[2J\r\x1b[1mbold\x1b[0m\n").unwrap();
++    assert_eq!(rows[0].to_string(), "safebold");
++    let rows = parse_output("line\n".repeat(100).as_bytes()).unwrap();
++    assert_eq!(rows.len(), 64);
++    assert!(rows[63].to_string().contains("clipped"));
++}
++
++#[test]
++fn panel_snapshot_is_styled_and_clips_without_touching_composer_rows() {
++    let lines = parse_output("CONTEXT USED     5H QUOTA USED\n\x1b[38;2;74;222;128m████░░\x1b[0m          █░░░░░\n37%              22%\n".as_bytes()).unwrap();
++    let mut buf = Buffer::empty(Rect::new(0, 0, 44, 5));
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    panel.inner.lock().unwrap().lines = lines;
++    panel.inner.lock().unwrap().width = 44;
++    panel.render(Rect::new(0, 0, 44, 3), &mut buf);
++    insta::assert_snapshot!(
++        buf.content
++            .iter()
++            .map(ratatui::buffer::Cell::symbol)
++            .collect::<String>()
++    );
++    assert_eq!(buf[(0, 3)].symbol(), " ");
++}
++
++fn tool_event(thread: &str) -> ServerNotification {
++    serde_json::from_value(json!({"method":"item/started","params":{
++    "threadId":thread,"turnId":"turn","startedAtMs":0,"item":{
++        "type":"dynamicToolCall","id":"call","namespace":null,"tool":"Read",
++        "arguments":{"command":"SECRET_COMMAND","prompt":"SECRET_PROMPT"},
++        "status":"inProgress","contentItems":null,"success":null,"durationMs":null
++    }}}))
++    .unwrap()
++}
++
++#[test]
++fn metadata_is_allowlisted_and_child_tool_ids_cannot_replace_main_calls() {
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    panel.update(json!({"session_id":"main"}));
++    panel
++        .inner
++        .lock()
++        .unwrap()
++        .agents
++        .insert("child".into(), json!({"id":"child","status":"running"}));
++    panel.observe(&tool_event("main"), Some("main".into()));
++    panel.observe(&tool_event("child"), Some("main".into()));
++    panel.observe(&tool_event("unrelated"), Some("main".into()));
++    let inner = panel.inner.lock().unwrap();
++    assert_eq!(inner.tools.len(), 2);
++    assert!(inner.tools.contains_key("main:call"));
++    assert!(inner.tools.contains_key("child:call"));
++    assert!(
++        !serde_json::to_string(&inner.tools)
++            .unwrap()
++            .contains("SECRET")
++    );
++}
++
++#[test]
++fn switching_threads_discards_cached_metadata_and_output() {
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    panel.update(json!({"session_id":"main"}));
++    panel.observe(&tool_event("main"), Some("main".into()));
++    panel.inner.lock().unwrap().lines = vec!["OLD_THREAD".into()];
++    panel.update(json!({"session_id":"other"}));
++    let inner = panel.inner.lock().unwrap();
++    assert!(inner.tools.is_empty());
++    assert!(inner.lines.is_empty());
++}
+diff --git a/codex-rs/tui/src/lib.rs b/codex-rs/tui/src/lib.rs
+index 147ff230b..90bddceef 100644
+--- a/codex-rs/tui/src/lib.rs
++++ b/codex-rs/tui/src/lib.rs
+@@ -178,6 +178,7 @@ pub(crate) mod live_wrap;
+ mod local_settings;
+ mod rendered_selection;
+ pub use live_wrap::RowBuilder;
++mod context_statusline;
+ mod local_chatgpt_auth;
+ mod managed_new_thread_defaults;
+ mod markdown;
+diff --git a/codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap b/codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap
+new file mode 100644
+index 000000000..91491d7c6
+--- /dev/null
++++ b/codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap
+@@ -0,0 +1,5 @@
++---
++source: tui/src/context_statusline_tests.rs
++expression: "buf.content.iter().map(|cell| cell.symbol()).collect::<String>()"
++---
++CONTEXT USED     5H QUOTA USED              ████░░          █░░░░░                      37%              22%
