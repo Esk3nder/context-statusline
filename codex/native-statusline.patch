@@ -203,10 +203,10 @@ index 5bd2254d8..bc910a910 100644
          if replay_kind.is_some()
              || matches!(
 diff --git a/codex-rs/tui/src/chatwidget/rendering.rs b/codex-rs/tui/src/chatwidget/rendering.rs
-index 15bbdad9d..4995f06e8 100644
+index 15bbdad9d..886add54c 100644
 --- a/codex-rs/tui/src/chatwidget/rendering.rs
 +++ b/codex-rs/tui/src/chatwidget/rendering.rs
-@@ -258,6 +258,16 @@ impl ChatWidget {
+@@ -258,6 +258,19 @@ impl ChatWidget {
              options.separate_status_line = options.command_popup_placement
                  != crate::bottom_pane::CommandPopupPlacement::AboveComposer;
              let bottom_pane = self.bottom_pane.backdrop_with_options(options);
@@ -215,7 +215,10 @@ index 15bbdad9d..4995f06e8 100644
 +            {
 +                let mut column = FlexRenderable::new();
 +                column.push(/*flex*/ 0, bottom_pane);
-+                column.push(/*flex*/ 1, RenderableItem::Borrowed(panel));
++                column.push(
++                    /*flex*/ 1,
++                    RenderableItem::Borrowed(panel).inset(Insets::tlbr(0, 2, 0, 2)),
++                );
 +                RenderableItem::Owned(Box::new(column))
 +            } else {
 +                bottom_pane
@@ -225,7 +228,7 @@ index 15bbdad9d..4995f06e8 100644
              }
 diff --git a/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap b/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap
 new file mode 100644
-index 000000000..77d343e1d
+index 000000000..d4e5d5bf9
 --- /dev/null
 +++ b/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap
 @@ -0,0 +1,10 @@
@@ -237,8 +240,8 @@ index 000000000..77d343e1d
 +› draft stays here
 +
 +  GPT-5.6-Sol default · /tmp/project
-+CUSTOM CONTEXT 37%
-+CUSTOM QUOTA 22%
++  CUSTOM CONTEXT 37%
++  CUSTOM QUOTA 22%
 diff --git a/codex-rs/tui/src/chatwidget/status_surfaces.rs b/codex-rs/tui/src/chatwidget/status_surfaces.rs
 index d7340e543..e115219a9 100644
 --- a/codex-rs/tui/src/chatwidget/status_surfaces.rs

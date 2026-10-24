@@ -314,9 +314,9 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
     now = time.time() if now is None else now
     state, snapshot = state or {}, snapshot or {}
     pct, left, cost, (usage, label, reset) = metrics(data, now)
-    pct_text = f'{pct:g}%' if pct is not None else 'unavailable'
+    pct_text = f'{round(pct, 1):g}%' if pct is not None else 'unavailable'
     room = compact_tokens(left) + ' left' if left is not None else 'room unavailable'
-    quota_text = f'{usage:g}%' if usage is not None else 'unavailable'
+    quota_text = f'{round(usage, 1):g}%' if usage is not None else 'unavailable'
     reset_text = 'reset ' + elapsed(reset - now) if reset is not None else 'reset unavailable'
     price = 'unavailable' if cost is None else f'${cost:.4f}' if 0 < cost < .01 else f'${cost:.2f}'
     rows = identity(data, width)
