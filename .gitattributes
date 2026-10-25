@@ -1,1 +1,2 @@
 * text=auto eol=lf
+codex/native-statusline.patch -whitespace
