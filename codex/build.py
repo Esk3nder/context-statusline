@@ -45,6 +45,19 @@ def bundle_version(source, metadata):
     return upstream_version(source)+'-statusline.'+inputs.hexdigest()[:12]
 
 
+def host_target(source):
+    """The host triple of the toolchain the pinned source selects.
+
+    Upstream's packager defaults to its release target, which is static musl on Linux and needs
+    upstream's hermetic musl/Zig toolchain; a bundle built for the build host needs neither.
+    """
+    info = subprocess.check_output(['rustc', '-vV'], cwd=source/'codex-rs', text=True)
+    match = re.search(r'(?m)^host: (\S+)$', info)
+    if not match:
+        raise ValueError('Cannot identify the Rust host target')
+    return match[1]
+
+
 def normalize_release_lock(source):
     """Upstream release tags bump Cargo.toml but leave workspace lock entries at 0.0.0."""
     version = upstream_version(source)
@@ -102,7 +115,8 @@ def package(source, output, metadata, profile):
     env = dict(os.environ, CODEX_REPO_ROOT=str(source))
     try:
         run([sys.executable, str(source/'scripts/build_codex_package.py'), '--variant', 'codex',
-             '--package-version', version, '--package-dir', str(output), '--cargo-profile', profile], source, env)
+             '--target', host_target(source), '--package-version', version, '--package-dir', str(output),
+             '--cargo-profile', profile], source, env)
         if sha(lock) != locked:
             raise ValueError('cargo changed Cargo.lock; the pinned dependency set must build as is')
         for name in sorted(RUNTIME):

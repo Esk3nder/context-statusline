@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import os
 from pathlib import Path
 import tempfile
@@ -57,14 +58,14 @@ from pathlib import Path
 if Path(os.environ.get("CODEX_REPO_ROOT", "/nonexistent")).resolve() != Path.cwd().resolve():
     sys.exit("CODEX_REPO_ROOT must point to the repository root")
 parser = argparse.ArgumentParser()
-for flag in ["--variant", "--package-version", "--package-dir", "--cargo-profile"]:
+for flag in ["--variant", "--target", "--package-version", "--package-dir", "--cargo-profile"]:
     parser.add_argument(flag, required=True)
 args = parser.parse_args()
 out = Path(args.package_dir)
 (out/"bin").mkdir(parents=True)
 (out/"bin/codex").write_text("#!/bin/sh\\n")
 (out/"bin/codex").chmod(0o755)
-(out/"codex-package.json").write_text(json.dumps({"version": args.package_version, "entrypoint": "bin/codex"}))
+(out/"codex-package.json").write_text(json.dumps({"version": args.package_version, "entrypoint": "bin/codex", "target": args.target}))
 if os.environ.get("TOUCH_LOCK"):
     Path("codex-rs/Cargo.lock").write_text("changed")
 '''
@@ -79,12 +80,13 @@ if os.environ.get("TOUCH_LOCK"):
             for name in [*build.RUNTIME, 'codex/UPSTREAM-LICENSE', 'codex/UPSTREAM-NOTICE']:
                 (ours/name).write_text('# '+name)
             metadata = {'revision': 'f'*40, 'patch_sha256': 'a'*64}
-            with patch.object(build, 'ROOT', ours):
+            with patch.object(build, 'ROOT', ours), patch.object(build, 'host_target', return_value='host-triple'):
                 bundle = build.package(source, Path(temp)/'bundle', metadata, 'dev')
                 manifest = install_codex.verify(bundle)
                 self.assertEqual(manifest['upstream_version'], '7.8.9')
                 self.assertEqual(manifest['version'], build.bundle_version(source, metadata))
                 self.assertEqual(manifest['entrypoint'], 'bin/codex')
+                self.assertEqual(json.loads((bundle/'codex-package.json').read_text())['target'], 'host-triple')
                 if os.name == 'posix':  # Windows marks files executable by extension, not mode bits
                     self.assertEqual(manifest['executables'], ['bin/codex'])
                 with patch.dict('os.environ', TOUCH_LOCK='1'), self.assertRaisesRegex(ValueError, 'Cargo.lock'):
