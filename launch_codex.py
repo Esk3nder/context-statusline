@@ -138,8 +138,9 @@ def stop_backend(process):
     except ProcessLookupError: return
     try: process.wait(timeout=3)
     except subprocess.TimeoutExpired: pass
+    # macOS answers EPERM when every remaining group member is already exiting or a zombie.
     try: os.killpg(process.pid, signal.SIGKILL)
-    except ProcessLookupError: pass
+    except (ProcessLookupError, PermissionError): pass
     process.wait()
 
 

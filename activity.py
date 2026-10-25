@@ -55,7 +55,8 @@ def database(create=False):
     if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077 or info.st_uid != os.getuid():
         raise OSError('unsafe state file')
     uri = 'file:' + quote(str(path.absolute()), safe='/') + ('?mode=rw' if create else '?mode=ro')
-    connection = sqlite3.connect(uri, uri=True, timeout=.2)
+    # Half of the 1 s hook budget in settings_fragment(); 200 ms dropped writes on slow machines.
+    connection = sqlite3.connect(uri, uri=True, timeout=.5)
     if create:
         connection.execute('CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, updated_at REAL NOT NULL, body TEXT NOT NULL)')
     return connection

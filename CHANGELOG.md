@@ -21,6 +21,8 @@
 - Fit inside Claude's footer spacing (`COLUMNS` less four cells) instead of overflowing into `…`.
 - Name the repository that owns the displayed branch, not the folder where the session started.
 - Keep the branch in the header on a busy machine instead of dropping it when git answers slowly.
+- Observers wait up to 500 ms for the activity database lock, so concurrent subagent events are not dropped on slow machines.
+- The macOS launcher no longer fails at exit when its backend process group has already finished (EPERM from `killpg`).
 - Omit zero configuration counts and name hook counts as `hooks on N events`.
 
 ### Changed
