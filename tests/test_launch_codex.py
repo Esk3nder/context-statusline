@@ -33,7 +33,8 @@ class MacBackendTests(unittest.TestCase):
         args = ['-C', '/tmp/project with spaces', '-c', 'model="mine"', '--enable', 'thing',
                 '--add-dir', '/tmp/other', '--no-daemon', 'resume', '--last']
         options, cwd, command = launch.backend_options(args)
-        self.assertEqual(cwd, Path('/tmp/project with spaces'))
+        # absolute() adds the drive on Windows; the launcher must not resolve symlinks.
+        self.assertEqual(cwd, Path('/tmp/project with spaces').absolute())
         self.assertEqual(options, ['-c', 'model="mine"', '--enable', 'thing'])
         self.assertEqual(command, 'resume')
         with self.assertRaisesRegex(ValueError, 'profile'):
@@ -92,7 +93,7 @@ class MacBackendTests(unittest.TestCase):
                 with self.assertRaises(SystemExit) as result:
                     launch.main()
                 self.assertEqual(result.exception.code, 42)
-                self.assertEqual(Path(execute.call_args.args[0]), root.resolve()/'codex')
+                self.assertEqual(Path(execute.call_args.args[0]), root.resolve()/('codex.exe' if os.name == 'nt' else 'codex'))
                 self.assertNotIn(launch.BACKEND_SOCKET, execute.call_args.args[2])
                 run.assert_not_called()
                 verify.assert_not_called()
