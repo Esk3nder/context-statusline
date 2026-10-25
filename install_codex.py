@@ -9,11 +9,15 @@ import platform
 import re
 import shlex
 import shutil
+import subprocess
 import sys
 import tempfile
 
 APP = 'context-statusline'
+# The panel runtime every bundle carries; codex/build.py copies exactly these files.
 RUNTIME = {'codex_statusline.py', 'launch_codex.py', 'context_statusline.py', 'activity.py', 'session_snapshot.py'}
+PACKAGE = 'codex-package.json'
+SAFE_NAME = r'[A-Za-z0-9][A-Za-z0-9_.-]{0,100}'
 
 
 def digest(path):
@@ -29,50 +33,42 @@ def _digest(stream):
 
 
 def verify(bundle):
+    """Check our bundle contract: host platform, safe paths, checksums and the panel runtime.
+
+    Upstream's package layout is validated by its own packager when the bundle is built
+    (codex/build.py); this only checks that the bundle agrees with its package metadata.
+    """
     if bundle.is_symlink() or (bundle/'manifest.json').is_symlink():
         raise ValueError('Symlinked bundles are refused')
     manifest = json.loads((bundle/'manifest.json').read_text())
     if not isinstance(manifest, dict):
         raise ValueError('Invalid bundle manifest')
     version, files = manifest.get('version'), manifest.get('files')
-    system = platform.system().lower()
+    # Bundles installed before executables were recorded stay valid rollback targets;
+    # install() refuses to stage a new bundle without the list.
+    entrypoint, executables = manifest.get('entrypoint'), manifest.get('executables', [])
     aliases = {'arm64': 'aarch64', 'amd64': 'x86_64'}
-    arch = aliases.get(platform.machine().lower(), platform.machine().lower())
-    host = system + '-' + arch
+    host = platform.system().lower() + '-' + aliases.get(platform.machine().lower(), platform.machine().lower())
     advertised = manifest.get('platform', '')
     advertised_os, _, advertised_arch = advertised.partition('-') if isinstance(advertised, str) else ('', '', '')
     if advertised_os + '-' + aliases.get(advertised_arch, advertised_arch) != host:
         raise ValueError('Bundle platform does not match this computer')
-    suffix = '.exe' if system == 'windows' else ''
-    binary = 'codex' + suffix
-    if not isinstance(version, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,100}', version):
+    if not isinstance(version, str) or not re.fullmatch(SAFE_NAME, version):
         raise ValueError('Invalid bundle version')
-    entrypoint = manifest.get('entrypoint')
-    if entrypoint != 'bin/' + binary:
-        raise ValueError('Invalid bundle entrypoint')
-    required = RUNTIME | {entrypoint, 'codex-package.json', 'bin/codex-code-mode-host'+suffix, 'codex-path/rg'+suffix}
-    if system == 'linux': required.add('codex-resources/bwrap')
-    if system == 'windows':
-        required |= {'codex-resources/codex-command-runner.exe', 'codex-resources/codex-windows-sandbox-setup.exe'}
-    if not isinstance(files, dict) or not required <= files.keys() or len(files) > 32:
+    if not isinstance(files, dict) or not isinstance(executables, list) or not set(executables) <= files.keys():
+        raise ValueError('Invalid bundle manifest')
+    if not isinstance(entrypoint, str) or not RUNTIME | {entrypoint, PACKAGE} <= files.keys():
         raise ValueError('Missing bundle runtime files')
     for name, expected in files.items():
         parts = name.split('/')
-        if len(parts) > 4 or any(not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,100}', part) for part in parts) or not isinstance(expected, str):
+        if any(not re.fullmatch(SAFE_NAME, part) for part in parts) or not isinstance(expected, str):
             raise ValueError('Unsafe manifest entry')
         path = bundle/name
         if any((bundle.joinpath(*parts[:index])).is_symlink() for index in range(1, len(parts)+1)) or not path.is_file() or digest(path) != expected:
             raise ValueError('Bundle verification failed: ' + name)
-    package = json.loads((bundle/'codex-package.json').read_text())
-    targets = {
-        'darwin': {arch+'-apple-darwin'},
-        'linux': {arch+'-unknown-linux-gnu', arch+'-unknown-linux-musl'},
-        'windows': {arch+'-pc-windows-msvc'},
-    }
-    expected_package = {'layoutVersion': 1, 'version': version, 'variant': 'codex',
-                        'entrypoint': entrypoint, 'resourcesDir': 'codex-resources', 'pathDir': 'codex-path'}
-    if not isinstance(package, dict) or any(package.get(key) != value for key, value in expected_package.items()) or not isinstance(package.get('target'), str) or package['target'] not in targets.get(system, set()):
-        raise ValueError('Inconsistent canonical package metadata')
+    package = json.loads((bundle/PACKAGE).read_text())
+    if not isinstance(package, dict) or package.get('version') != version or package.get('entrypoint') != entrypoint:
+        raise ValueError('Bundle manifest disagrees with its canonical package metadata')
     return manifest
 
 
@@ -96,7 +92,7 @@ def paths(prefix):
 
 
 def activate(library, launcher, version, state):
-    if not isinstance(version, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,100}', version):
+    if not isinstance(version, str) or not re.fullmatch(SAFE_NAME, version):
         raise ValueError('Invalid installed version')
     installed = library/'versions'/version
     verify(installed)
@@ -131,6 +127,8 @@ def activate(library, launcher, version, state):
 def install(bundle, prefix):
     bundle = Path(bundle).absolute()
     manifest = verify(bundle)
+    if 'executables' not in manifest:
+        raise ValueError('This bundle predates executable metadata; build or download a current one')
     library, launcher, state = paths(prefix)
     versions = library/'versions'
     versions.mkdir(exist_ok=True)
@@ -147,8 +145,7 @@ def install(bundle, prefix):
                 shutil.copyfile(bundle/name, staged/name, follow_symlinks=False)
             verify(staged)
             for name in manifest['files']:
-                executable = Path(name).name.startswith(('codex', 'bwrap', 'rg')) and not name.endswith(('.py', '.json'))
-                (staged/name).chmod(0o755 if executable else 0o644)
+                (staged/name).chmod(0o755 if name in manifest['executables'] else 0o644)
             staged.rename(installed)
     return activate(library, launcher, manifest['version'], state)
 
@@ -166,19 +163,45 @@ def uninstall(prefix):
     # Verified version bundles are retained for rollback; no user or stock files are removed.
 
 
+def next_steps(prefix):
+    """What still stands between the active install and a working `codex-statusline`."""
+    library, launcher, state = paths(prefix)
+    steps = []
+    if shutil.which(launcher.name) != str(launcher):
+        steps.append(f'Add {launcher.parent} to your PATH so `{launcher.stem}` runs this launcher.')
+    version = verify(library/'versions'/state['current']).get('upstream_version')
+    if sys.platform == 'darwin' and version:
+        from launch_codex import install_hint, official_binary, verify_macos_backend
+        try:
+            candidate = shutil.which('codex')
+            if not candidate:
+                raise ValueError('Official Codex is not on PATH; ' + install_hint(version))
+            verify_macos_backend(official_binary(candidate), version)
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            steps.append(str(exc))
+    return steps
+
+
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('bundle', type=Path, nargs='?')
-    parser.add_argument('--prefix', type=Path, default=Path.home()/'.local')
+    parser = argparse.ArgumentParser(description=__doc__, epilog=(
+        'Prints the launcher path on stdout; remaining setup steps, if any, go to stderr.'))
+    parser.add_argument('bundle', type=Path, nargs='?', help='directory of a verified bundle to install')
+    parser.add_argument('--prefix', type=Path, default=Path.home()/'.local',
+                        help='install root; the launcher goes in PREFIX/bin (default: %(default)s)')
     modes = parser.add_mutually_exclusive_group()
-    modes.add_argument('--rollback', action='store_true')
-    modes.add_argument('--uninstall', action='store_true')
+    modes.add_argument('--rollback', action='store_true', help='reactivate the previously installed bundle')
+    modes.add_argument('--uninstall', action='store_true', help='remove the launcher; installed bundles are kept')
     args = parser.parse_args()
     try:
-        if args.rollback: print(rollback(args.prefix))
-        elif args.uninstall: uninstall(args.prefix)
-        elif args.bundle: print(install(args.bundle, args.prefix))
+        if args.uninstall:
+            uninstall(args.prefix)
+            return
+        if args.rollback: launcher = rollback(args.prefix)
+        elif args.bundle: launcher = install(args.bundle, args.prefix)
         else: parser.error('Provide a local bundle, --rollback or --uninstall')
+        print(launcher)
+        for step in next_steps(args.prefix):
+            print('Next: ' + step, file=sys.stderr)
     except (OSError, ValueError) as exc:
         parser.exit(1, f'Installation failed: {exc}\n')
 

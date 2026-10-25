@@ -1,9 +1,6 @@
 {
   "repository": "https://github.com/openai/codex.git",
-  "tag": "rust-v0.164.0",
   "revision": "6aaac694803004a63c6f393d153c96d22521a6b9",
-  "bundle_version": "0.164.0-statusline.6",
-  "rust": "1.99.1",
   "patch": "native-statusline.patch",
   "patch_sha256": "48d05f42fe5f6e310b1ff0f15c607ce519aeea64f0bdebd967c25bf0b10d0044",
   "patched_files_sha256": {

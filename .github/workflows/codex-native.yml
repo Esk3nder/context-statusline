@@ -29,23 +29,24 @@ jobs:
       - name: Install Linux native build dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libasound2-dev libcap-dev clang cmake ninja-build
-      - name: Install pinned Rust
-        shell: bash
-        run: rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy
       - name: Verify adapters and installer
         shell: bash
-        run: |
-          python -m unittest discover -s tests -p test_codex.py -v
-          python -m unittest discover -s tests -p test_install_codex.py -v
-          python -m unittest discover -s tests -p test_launch_codex.py -v
+        run: python -m unittest discover -s tests -p 'test_*codex*.py' -v
+      - name: Fetch and patch the pinned source
+        shell: bash
+        run: python codex/build.py --source "$RUNNER_TEMP/codex-statusline-source" --check
+      - name: Install the source's own Rust toolchain
+        shell: bash
+        working-directory: ${{ runner.temp }}/codex-statusline-source/codex-rs
+        run: rustup toolchain install
       - name: Build pinned source and package
         shell: bash
         run: python codex/build.py --source "$RUNNER_TEMP/codex-statusline-source" --output "$RUNNER_TEMP/codex-statusline-bundle"
       - name: Test the native panel and composer layout
         shell: bash
-        run: |
-          cd "$RUNNER_TEMP/codex-statusline-source/codex-rs"
-          env -u NO_COLOR cargo test --release -p codex-tui --lib context_statusline
+        working-directory: ${{ runner.temp }}/codex-statusline-source/codex-rs
+        # Same target and profile as upstream's packager, so the test reuses its build.
+        run: env -u NO_COLOR cargo test --target "$(rustc -vV | sed -n 's/^host: //p')" --release -p codex-tui --lib context_statusline
       - name: Verify the actual bundled launcher
         shell: bash
         run: |

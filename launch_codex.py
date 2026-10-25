@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import stat
@@ -11,15 +12,56 @@ import tempfile
 import time
 
 BACKEND_SOCKET = 'CODEX_STATUSLINE_BACKEND_SOCKET'
+# OpenAI's Apple Developer team is the trust anchor; it cannot be read from the program it vets.
 OFFICIAL_REQUIREMENT = 'identifier "codex" and anchor apple generic and certificate leaf[subject.OU] = "2DC432GLL2"'
-UTILITIES = {'exec', 'e', 'review', 'login', 'logout', 'mcp', 'plugin', 'app-server',
-             'remote-control', 'app', 'completion', 'doctor', 'sandbox', 'debug',
-             'apply', 'a', 'queue', 'archive', 'delete', 'migrate-rollouts', 'migrate-nfs-db',
-             'unarchive', 'cloud', 'cloud-tasks', 'exec-server', 'features', 'help',
-             'tcp-tunnel', 'execpolicy', 'responses-api-proxy', 'stdio-to-uds', 'agents'}
-VALUE_OPTIONS = {'-c', '--config', '--enable', '--disable', '-C', '--cd', '-m', '--model',
-                 '-s', '--sandbox', '-a', '--ask-for-approval', '--add-dir', '--local-provider',
-                 '--remote', '--remote-auth-token-env', '-p', '--profile', '-i', '--image'}
+# Subcommands that open the interactive session and so get the panel. Every other subcommand,
+# including ones a later Codex adds, goes to official Codex: the safe default for credentials.
+SESSIONS = {'resume', 'fork'}
+
+
+class Cli:
+    """The pinned Codex CLI surface, asked of the bundled binary instead of copied by hand."""
+
+    def __init__(self, binary):
+        self.binary = str(binary)
+        help_text = subprocess.run([self.binary, '--help'], check=True, capture_output=True,
+                                   text=True, timeout=10).stdout
+        self.value_options = {name for line in help_text.splitlines()
+                              for name in re.findall(r'(?<![\w-])(-[A-Za-z]|--[\w-]+)(?=,| <)', line)
+                              if line.lstrip().startswith('-') and ' <' in line}
+
+    def is_subcommand(self, word):
+        # clap resolves hidden subcommands and aliases here; a prompt word exits non-zero.
+        return subprocess.run([self.binary, 'help', word], stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL, timeout=10).returncode == 0
+
+
+def install_hint(version):
+    return f'install it with: npm install -g @openai/codex@{version}'
+
+
+def official_binary(candidate):
+    """Map the PATH `codex` to the executable OpenAI signs.
+
+    npm installs put a Node wrapper on PATH; it runs the binary from the platform package that
+    npm selected for this computer, nested or hoisted, or from the package's own vendor tree.
+    """
+    path = Path(candidate).resolve()
+    package = path.parent.parent
+    try:
+        manifest = json.loads((package/'package.json').read_text())
+    except (OSError, ValueError):
+        return path
+    if path.name != 'codex.js' or manifest.get('name') != '@openai/codex':
+        return path
+    roots = [package]
+    for name in manifest.get('optionalDependencies', {}):
+        scope, _, base = name.partition('/')
+        roots += [package/'node_modules'/scope/base, package.parent/base]
+    found = sorted({exe for root in roots for exe in root.glob('vendor/*/bin/codex') if exe.is_file()})
+    if len(found) != 1:
+        raise ValueError(f'Cannot find the signed binary inside the npm Codex package at {package}')
+    return found[0]
 
 
 def verify_macos_backend(binary, version):
@@ -28,34 +70,41 @@ def verify_macos_backend(binary, version):
         subprocess.run(['/usr/bin/codesign', '--verify', '--strict', '-R', '='+OFFICIAL_REQUIREMENT,
                         str(binary)], check=True, capture_output=True, text=True, timeout=10)
     except (OSError, subprocess.SubprocessError) as exc:
-        raise ValueError('The macOS backend must be official, OpenAI-signed Codex on PATH') from exc
+        raise ValueError(f'The macOS backend must be official, OpenAI-signed Codex; {binary} is not; '
+                         + install_hint(version)) from exc
     result = subprocess.run([str(binary), '--version'], check=True, capture_output=True,
                             text=True, timeout=10)
     if result.stdout.strip() != 'codex-cli '+version:
-        raise ValueError('This custom UI requires official Codex '+version+' on PATH')
+        raise ValueError(f'This custom UI requires official Codex {version} on PATH, found '
+                         f'{result.stdout.strip() or "no version"}; ' + install_hint(version))
 
 
-def backend_options(args):
-    """Forward invocation config without inspecting configuration or credential contents."""
+def backend_options(args, cli):
+    """Forward invocation config without inspecting configuration or credential contents.
+
+    Returns the backend options, the working directory and the mode: 'session', 'remote-ui'
+    or 'utility'.
+    """
     options, cwd, command = [], None, None
     profile, remote = False, False
+    short = {name for name in cli.value_options if len(name) == 2}
     index = 0
     while index < len(args):
         arg = args[index]
         if arg == '--': break
         key, equal, inline = arg.partition('=')
-        if key in VALUE_OPTIONS:
+        if key in cli.value_options:
             if equal: value = inline
             elif index+1 < len(args):
                 index += 1
                 value = args[index]
             else: raise ValueError('Missing value for '+key)
-        elif len(arg) > 2 and arg[:2] in {'-c', '-C', '-m', '-p', '-i', '-s', '-a'}:
+        elif len(arg) > 2 and arg[:2] in short:
             key, value = arg[:2], arg[2:]
         else:
             if not arg.startswith('-') and command is None:
-                command = arg if arg in UTILITIES | {'resume', 'fork'} else 'prompt'
-                if command in UTILITIES: break
+                command = arg if cli.is_subcommand(arg) else 'prompt'
+                if command not in SESSIONS | {'prompt'}: break
             index += 1
             continue
         if key in {'-p', '--profile'}:
@@ -64,9 +113,10 @@ def backend_options(args):
         if key in {'-c', '--config', '--enable', '--disable'}: options.extend([key, value])
         elif key in {'-C', '--cd'}: cwd = Path(value).expanduser().absolute()
         index += 1
-    if profile and not remote and command not in UTILITIES:
+    mode = 'utility' if command not in SESSIONS | {'prompt', None} else 'remote-ui' if remote else 'session'
+    if profile and mode == 'session':
         raise ValueError('Named --profile selection is not yet supported by the macOS signed backend; use official codex for that profile')
-    return options, cwd, 'remote-ui' if remote and command not in UTILITIES else None if command == 'prompt' else command
+    return options, cwd, mode
 
 
 def hand_over(command, env):
@@ -93,9 +143,8 @@ def stop_backend(process):
     process.wait()
 
 
-def run_macos_ui(backend, ui_command, args, env, startup_timeout=45):
+def run_macos_ui(backend, ui_command, env, options=(), cwd=None, startup_timeout=45):
     import termios
-    options, cwd, _ = backend_options(args)
     terminal = termios.tcgetattr(sys.stdin.fileno()) if sys.stdin.isatty() else None
     backend_env = {key: value for key, value in env.items()
                    if key not in {BACKEND_SOCKET, 'CODEX_STATUSLINE_COMMAND'}}
@@ -146,7 +195,7 @@ def run_macos_ui(backend, ui_command, args, env, startup_timeout=45):
 def main():
     root = Path(__file__).resolve().parent
     manifest = json.loads((root/'manifest.json').read_text())
-    binary = root/manifest.get('entrypoint', 'codex.exe' if os.name == 'nt' else 'codex')
+    binary = root/manifest['entrypoint']
     args = sys.argv[1:]
     env = dict(os.environ)
     env['CODEX_STATUSLINE_COMMAND'] = json.dumps([sys.executable, str(root/'codex_statusline.py')])
@@ -154,21 +203,23 @@ def main():
         raise SystemExit('Update this patched build with install_codex.py and a new verified bundle; stock Codex updates do not contain the panel.')
     if sys.platform == 'darwin' and args not in [['--version'], ['-V'], ['--help'], ['-h']]:
         try:
-            _, _, command = backend_options(args)
-            if command not in UTILITIES and (not sys.stdin.isatty() or not sys.stdout.isatty()):
+            options, cwd, mode = backend_options(args, Cli(binary))
+            if mode != 'utility' and (not sys.stdin.isatty() or not sys.stdout.isatty()):
                 raise ValueError('Run codex-statusline in a regular interactive terminal')
-            if command == 'remote-ui':
+            if mode == 'remote-ui':
                 env.pop(BACKEND_SOCKET, None)
                 os.execve(str(binary), [str(binary), '-c', 'check_for_update_on_startup=false', *args], env)
+            version = manifest['upstream_version']
             candidate = shutil.which('codex')
-            if not candidate: raise ValueError('Install official Codex on PATH before starting the custom macOS UI')
-            backend = Path(candidate).resolve()
-            verify_macos_backend(backend, manifest['version'].split('-statusline.', 1)[0])
-            if command in UTILITIES:
+            if not candidate: raise ValueError('Official Codex is not on PATH; ' + install_hint(version))
+            backend = official_binary(candidate)
+            verify_macos_backend(backend, version)
+            if mode == 'utility':
                 env.pop('CODEX_STATUSLINE_COMMAND', None)
                 env.pop(BACKEND_SOCKET, None)
                 os.execve(str(backend), [str(backend), *args], env)
-            return run_macos_ui(backend, [str(binary), '-c', 'check_for_update_on_startup=false', *args], args, env)
+            return run_macos_ui(backend, [str(binary), '-c', 'check_for_update_on_startup=false', *args],
+                                env, options, cwd)
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
             raise SystemExit(str(exc)) from exc
         except KeyboardInterrupt:

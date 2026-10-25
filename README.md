@@ -8,16 +8,19 @@ An opinionated, wide statusline for Claude Code. Keep the current task, main and
 
 ## Install
 
-Requires **Python 3.10+**, Bash, and Claude Code. No `jq`, pip packages, daemon, API keys or network calls are needed at runtime. macOS and Linux are supported.
+Requires **Python 3.9+** (the `python3` that ships with macOS works), Bash, and Claude Code. No `jq`, pip packages, daemon, API keys or network calls are needed at runtime. macOS and Linux are supported. For the Codex build, see [Codex](#codex).
 
 ```bash
 git clone https://github.com/Esk3nder/context-statusline.git ~/.claude/context-statusline
-~/.claude/context-statusline/context-bar.sh --settings
+python3 ~/.claude/context-statusline/install_claude.py --dry-run   # show the change
+python3 ~/.claude/context-statusline/install_claude.py             # apply it
 ```
 
-The second command prints a configuration fragment pointing at your checkout. It **does not edit your settings**. Keep the checkout together: `context-bar.sh`, `context_statusline.py`, `activity.py` and `session_snapshot.py` are the four runtime files. Keep all four together.
+The installer adds `statusLine` and `subagentStatusLine` entries for this checkout to `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json`). It backs up a file it changes and keeps every other setting and hook. It refuses to replace another tool's statusline unless you add `--replace`. Add `--observers` for the [activity observers](#optional-activity-observers). `--uninstall` removes only the entries this checkout added. Running it again changes nothing.
 
-Back up `~/.claude/settings.json`, then merge the generated `statusLine` and `subagentStatusLine` entries into it. A minimal example, without activity observers:
+Keep the checkout where you cloned it: the settings point at its `context-bar.sh`, which needs `context_statusline.py`, `activity.py` and `session_snapshot.py` beside it.
+
+To merge by hand instead, `~/.claude/context-statusline/context-bar.sh --settings` prints the same entries and **does not edit your settings**. Back up `~/.claude/settings.json`, then merge the generated `statusLine` and `subagentStatusLine` entries into it. A minimal example, without activity observers:
 
 ```json
 {
@@ -37,7 +40,7 @@ Claude reloads saved settings. Keep any unrelated settings and hooks. If another
 
 ### Optional activity observers
 
-To add main/subagent tool targets, observed skill/MCP usage and legacy to-do tracking, append the hook groups printed by `--settings` to the corresponding arrays in your existing `hooks` object. **Do not replace existing hook arrays.** The generated commands record metadata only; they never allow, deny or block a tool call.
+To add main/subagent tool targets, observed skill/MCP usage and legacy to-do tracking, run `install_claude.py --observers`. By hand, append the hook groups printed by `--settings` to the corresponding arrays in your existing `hooks` object. **Do not replace existing hook arrays.** The generated commands record metadata only; they never allow, deny or block a tool call.
 
 The observers cover tool requests/results/failures, permission events, subagent start/stop, compaction completion and session end. They retain IDs, timestamps, tool/event names, sanitized file basenames for known file tools, successful skill/MCP names, and confirmed legacy `TodoWrite` titles/statuses in a private local SQLite cache. They never store commands, file contents, search patterns, raw tool inputs/results, task descriptions, prompts, transcripts, compaction summaries or credentials. No transcript files are opened. Records expire after 24 hours, are pruned on the next observer write, and are removed for a session on `SessionEnd`.
 
@@ -92,9 +95,24 @@ Diagnostics expose normalized metrics, observer evidence, used capability names 
 
 ## Codex
 
-The shared wide design runs **inside our patched Codex CLI**, based on upstream **0.164.0**. No new terminal, pane arrangement or upstream extension approval is needed. Stock Codex's `/statusline` picker still supports only its own built-in fields; it does not provide this renderer bridge. This does not customize the Codex desktop app.
+The shared wide design runs **inside our patched Codex CLI**, built from the upstream release commit pinned in `codex/upstream.json`. No new terminal, pane arrangement or upstream extension approval is needed. Stock Codex's `/statusline` picker still supports only its own built-in fields; it does not provide this renderer bridge. This does not customize the Codex desktop app.
 
-Install a trusted, platform-matching bundle produced by the **Native Codex bundle** workflow, or build one locally. Python **3.10+** must be available on the target computer. Bundles contain the patched Codex binary, its canonical helper/ripgrep layout, the shared renderer, upstream license/notices and a SHA-256 file manifest. Artifact checksums verify integrity, not the publisher's identity; use a bundle from a build/source you trust.
+### Codex quick start
+
+1. Get a bundle for your computer. The **Native Codex bundle** workflow builds one per platform. Download the newest successful run's artifact (this needs a GitHub sign-in, and artifacts expire after the workflow's retention period):
+
+   ```bash
+   run=$(gh run list --repo Esk3nder/context-statusline --workflow codex-native.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+   gh api "repos/Esk3nder/context-statusline/actions/runs/$run/artifacts" --jq '.artifacts[].name'   # one per OS and CPU
+   gh run download "$run" --repo Esk3nder/context-statusline --name NAME-FROM-THAT-LIST --dir codex-statusline-bundle
+   ```
+
+   Or [build one locally](#build-from-source).
+2. Install it from your checkout of this repository: `python3 install_codex.py codex-statusline-bundle`. The installer prints the launcher path and any step still missing, such as adding `~/.local/bin` to your PATH.
+3. On macOS, install official Codex at the version the bundle was built from. The installer names it and prints the command, for example `npm install -g @openai/codex@<version>`. Homebrew's `codex` cask also works when it is at that version.
+4. Run `codex-statusline`.
+
+Python **3.9+** must be available on the target computer. Bundles contain the patched Codex binary, its canonical helper/ripgrep layout, the shared renderer, upstream license/notices and a SHA-256 file manifest. Artifact checksums verify integrity, not the publisher's identity; use a bundle from a build/source you trust.
 
 ```bash
 python3 install_codex.py /path/to/codex-statusline-bundle
@@ -103,16 +121,16 @@ python3 install_codex.py /path/to/codex-statusline-bundle
 
 On Windows, use `python` and run `%USERPROFILE%\.local\bin\codex-statusline.cmd`. Add that `bin` directory to your PATH if needed. Setup installs immutable versioned bundles under `~/.local/lib/context-statusline/versions/` and creates only the named `codex-statusline` launcher. It preserves stock `codex`, auth, existing hooks and Auto-managed status settings. It refuses edited/unowned launchers, unsafe bundle paths, symlinks in managed locations and checksum mismatches. Global Codex configuration and credentials are not copied or rewritten.
 
-On macOS, install official **Codex 0.164.0** as `codex` on PATH. The launcher verifies its OpenAI signature and exact version before starting a local session. Official Codex runs the agent and authenticated MCP integrations; our patched TUI connects through a private Unix socket and renders the panel in the same terminal. The statusline renderer has no credential API. This avoids introducing our unsigned executable as a new MCP Keychain reader. Existing macOS access rules still apply to official Codex; we do not grant access or suppress its legitimate authentication prompts.
+On macOS, official Codex must be on PATH as `codex`, at the exact upstream version recorded in the bundle's `manifest.json`. An npm install works: the launcher follows npm's Node wrapper to the signed binary inside the package. The launcher verifies the OpenAI signature and the version before starting a local session; when either check fails, the message gives the install command. Official Codex runs the agent and authenticated MCP integrations; our patched TUI connects through a private Unix socket and renders the panel in the same terminal. The statusline renderer has no credential API. This avoids introducing our unsigned executable as a new MCP Keychain reader. Existing macOS access rules still apply to official Codex; we do not grant access or suppress its legitimate authentication prompts.
 
-Each local macOS launch owns one official app-server child, with no persistent service or TCP listener. The launcher cleans up that process group when the UI exits, including interrupt, hangup, terminate and quit signals. Startup failure stops the launch; the UI never falls back to its unsigned embedded backend. Utility commands and `agents` delegate to official Codex; `agents` retains its shared-daemon overview without the custom panel. Explicit `--remote` connects the custom UI to the requested server without starting a local backend. Local named `--profile` selection is currently refused because the pinned app-server does not expose the same profile selector; use official `codex --profile NAME` for those sessions. Linux and Windows keep the bundled embedded backend. Other CLI arguments are forwarded to the UI, with explicit config/feature overrides and working-directory selection also forwarded to the local macOS backend.
+Each local macOS launch owns one official app-server child, with no persistent service or TCP listener. The launcher cleans up that process group when the UI exits, including interrupt, hangup, terminate and quit signals. Startup failure stops the launch; the UI never falls back to its unsigned embedded backend. Every Codex subcommand except `resume` and `fork` delegates to official Codex; the launcher asks the bundled binary which words are subcommands, so new upstream commands need no launcher change. Explicit `--remote` connects the custom UI to the requested server without starting a local backend. Local named `--profile` selection is currently refused because the pinned app-server does not expose the same profile selector; use official `codex --profile NAME` for those sessions. Linux and Windows keep the bundled embedded backend. Other CLI arguments are forwarded to the UI, with explicit config/feature overrides and working-directory selection also forwarded to the local macOS backend.
 
 ```bash
 python3 install_codex.py --rollback
 python3 install_codex.py --uninstall
 ```
 
-The installer checks the bundle OS/CPU, canonical package metadata, required platform helpers and every file checksum before activation.
+The installer checks the bundle OS/CPU, the panel runtime files, agreement with the canonical package metadata and every file checksum before activation. Upstream's packager validates the Codex package layout when the bundle is built.
 
 Rollback activates the preceding verified bundle. Uninstall removes the owned launcher and retains bundles for recovery; it never removes stock Codex. A custom `--prefix` works with all three installer operations.
 
@@ -120,28 +138,36 @@ Native context uses the latest active context count, not cumulative session toke
 
 The TUI patch is opt-in through `CODEX_STATUSLINE_COMMAND`, a JSON array of executable/argv entries set by the launcher. It uses no shell expansion. The command is validated once at startup; a malformed value is a startup error, not a silent no-panel. At most one renderer runs per widget, at most twice per second, with a 2 s timeout, 1 MiB input cap and 64 KiB output cap. Native text labels are limited to 512 characters before crossing the process boundary. Unix process groups and Windows Job Objects clean up renderer descendants on timeout, error and normal exit. Output is converted into styled cells with terminal control sequences removed; tabs expand to 8-column stops. A 64-row transport bound is disclosed when clipping, and the panel never takes more than a third of the screen. A renderer failure or timeout keeps the last good output on screen; renderer errors leave native Codex usable; dialogs and input take layout priority. Resumed threads rebuild the used-MCP and known-agent sets from history. We do not alter the backend, model context, permissions, approval behavior or agent tools.
 
-To reproduce a source build, install the pinned Rust 1.99.1 toolchain and native build dependencies, then:
+### Build from source
+
+Install [rustup](https://rustup.rs) and the native build dependencies upstream Codex needs (the Linux list is in `.github/workflows/codex-native.yml`). The pinned source declares its own Rust toolchain in `codex-rs/rust-toolchain.toml`. Then:
 
 ```bash
-python3 codex/build.py --source /path/to/fresh-source --output /path/to/new-bundle
+python3 codex/build.py --source ~/src/codex-statusline-source --check        # fetch and patch the pinned commit
+(cd ~/src/codex-statusline-source/codex-rs && rustup toolchain install)      # the toolchain that source declares
+python3 codex/build.py --source ~/src/codex-statusline-source --output ~/src/codex-statusline-bundle
 ```
 
-`codex/upstream.json` pins the upstream commit, feature-patch checksum and resulting source-file checksums. After changing the TUI source in a checkout of the pinned revision, `python3 codex/export_patch.py --source /path/to/checkout --bundle-version 0.164.0-statusline.N` regenerates the patch and both checksum sets. The build verifies/applies only our TUI patch. Upstream release tags retain development workspace versions in Cargo.lock; the script normalizes those workspace version fields without changing dependency revisions. `--check` verifies/prepares source without compiling; `--profile dev` makes a local development bundle. CI builds native macOS ARM64, Linux x86-64 and Windows x86-64 artifacts. Other architectures need separate builds. These are test artifacts, not notarized public macOS releases; signing/notarization and a stable release channel remain distribution work.
+Inside `codex-rs`, `rustc --version` must show the channel that `rust-toolchain.toml` declares. If it shows another version, a non-rustup Rust (for example Homebrew's `rust` formula) is ahead of rustup's proxies on PATH; put rustup's `bin` directory first.
+
+`codex/upstream.json` pins the upstream commit, feature-patch checksum and resulting source-file checksums; it holds no version numbers. The Codex version is read from the pinned source's `Cargo.toml`, and the bundle version is that version plus a digest of our patch and runtime files, so every change gets a new version without a hand-edited counter. After changing the TUI source in a checkout of the pinned revision, `python3 codex/export_patch.py --source /path/to/checkout` regenerates the patch and both checksum sets. The build verifies/applies only our TUI patch, then hands compilation, helper binaries, stripping and layout validation to upstream's own packager (`scripts/build_codex_package.py`) and adds the panel runtime. Upstream release tags retain development workspace versions in Cargo.lock; the script normalizes those workspace version fields without changing dependency revisions. `--check` verifies/prepares source without compiling; `--profile dev` makes a local development bundle. CI builds native macOS ARM64, Linux x86-64 and Windows x86-64 artifacts. Other architectures need separate builds. These are test artifacts, not notarized public macOS releases; signing/notarization and a stable release channel remain distribution work.
 
 Our maintenance is the renderer/adapters, bounded TUI patch and launcher. The official app-server interface is experimental, so each upgrade must verify the local connection and credential boundary as well as the panel. For an upstream update: select a new pinned release, apply the patch, review any conflict, run adapter/installer/launcher/TUI tests, build each supported platform and publish a new bundle only after validation. A failed upgrade keeps the previous installed version available. Stock Codex updates do not update our independently installed bundle; on macOS the official backend must match the UI's pinned upstream version. The launcher disables the UI's official startup update check for this invocation and directs `codex-statusline update` to our bundle installer.
 
 ## Upgrade and rollback
 
-The Bash entry-point path remains the same, but it now delegates to Python and must be installed with all three Python files. Existing single-file `curl` installations must switch to the full checkout. To update, run `git pull` in that checkout. To undo configuration changes, restore your settings backup or remove only the two statusline entries and the observer commands you added. Other hooks should stay intact.
+The Bash entry-point path remains the same, but it now delegates to Python and needs the Python files beside it. Existing single-file `curl` installations must switch to the full checkout. To update, run `git pull` in that checkout; the settings keep pointing at it. To undo configuration changes, run `python3 install_claude.py --uninstall`, or restore the `.bak` backup it wrote next to your settings. Other settings and hooks stay intact.
 
 ## Develop
 
 ```bash
 python3 -m unittest discover -s tests -v
 bash -n context-bar.sh
-python3 -m py_compile context_statusline.py activity.py session_snapshot.py
-python3 docs/examples/render.py
+git ls-files -z '*.py' | xargs -0 python3 -m py_compile
+python3 docs/examples/render.py && git diff --exit-code -- docs/examples
 ```
+
+These are the same checks CI runs (`.github/workflows/test.yml`). Agents: see [AGENTS.md](AGENTS.md).
 
 Tests cover input validation, supplied cost accounting, missing/zero values, Unicode width and terminal controls, native JSONL, concurrent observer writes, session isolation, expiry and private storage. The fixture inputs contain no real session data. Example generation runs the same rendering functions as the executable.
 

@@ -36,7 +36,6 @@ def export(source, metadata):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', type=Path, required=True, help='patched checkout of the pinned revision')
-    parser.add_argument('--bundle-version', help='new bundle version to record, e.g. 0.164.0-statusline.5')
     args = parser.parse_args()
     metadata_path = ROOT/'codex/upstream.json'
     metadata = json.loads(metadata_path.read_text())
@@ -44,8 +43,6 @@ def main():
     (ROOT/'codex'/metadata['patch']).write_bytes(patch)
     metadata['patch_sha256'] = hashlib.sha256(patch).hexdigest()
     metadata['patched_files_sha256'] = hashes
-    if args.bundle_version:
-        metadata['bundle_version'] = args.bundle_version
     metadata_path.write_text(json.dumps(metadata, indent=2)+'\n')
     print(f"{metadata['patch']}: {len(hashes)} files, sha256 {metadata['patch_sha256']}")
 
