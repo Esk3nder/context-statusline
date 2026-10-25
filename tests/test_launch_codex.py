@@ -98,6 +98,41 @@ class MacBackendTests(unittest.TestCase):
                 run.assert_not_called()
                 verify.assert_not_called()
 
+    def test_other_platforms_hand_the_console_to_the_bundled_binary(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root/'manifest.json').write_text(json.dumps({'version': '0.164.0-statusline.5'}))
+            with patch.object(launch, '__file__', str(root/'launch_codex.py')), \
+                 patch.object(launch.sys, 'platform', 'win32'), \
+                 patch.object(launch.sys, 'argv', ['codex-statusline', '--version']), \
+                 patch.object(launch, 'hand_over', return_value=7) as hand_over:
+                self.assertEqual(launch.main(), 7)
+            command, env = hand_over.call_args.args
+            self.assertEqual(Path(command[0]), root.resolve()/('codex.exe' if os.name == 'nt' else 'codex'))
+            self.assertEqual(command[1:], ['-c', 'check_for_update_on_startup=false', '--version'])
+            self.assertIn('CODEX_STATUSLINE_COMMAND', env)
+
+    def test_windows_runs_the_binary_and_forwards_its_exit_code(self):
+        # Windows has no exec: CPython 3.14's os.execve dies with an access violation there, and
+        # even a working one would return the shell prompt while the TUI still owns the console.
+        with patch.object(launch.os, 'name', 'nt'), \
+             patch.object(launch.os, 'execve') as execute, \
+             patch.object(launch.signal, 'signal') as handle, \
+             patch.object(launch.subprocess, 'run', return_value=subprocess.CompletedProcess([], 7)) as run:
+            self.assertEqual(launch.hand_over(['C:/bundle/codex.exe', '--version'], {'A': '1'}), 7)
+        execute.assert_not_called()
+        run.assert_called_once_with(['C:/bundle/codex.exe', '--version'], env={'A': '1'})
+        handle.assert_called_once_with(signal.SIGINT, signal.SIG_IGN)
+
+    @unittest.skipUnless(os.name == 'posix', 'Unix exec')
+    def test_posix_replaces_the_launcher_process(self):
+        with patch.object(launch.os, 'execve', side_effect=SystemExit(42)) as execute, \
+             patch.object(launch.subprocess, 'run') as run:
+            with self.assertRaises(SystemExit):
+                launch.hand_over(['/bundle/codex', '--version'], {'A': '1'})
+        execute.assert_called_once_with('/bundle/codex', ['/bundle/codex', '--version'], {'A': '1'})
+        run.assert_not_called()
+
     @unittest.skipUnless(os.name == 'posix', 'Unix child lifecycle')
     def test_failed_backend_never_starts_ui(self):
         with tempfile.TemporaryDirectory() as temp:

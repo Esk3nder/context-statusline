@@ -69,6 +69,19 @@ def backend_options(args):
     return options, cwd, 'remote-ui' if remote and command not in UTILITIES else None if command == 'prompt' else command
 
 
+def hand_over(command, env):
+    """Give the console to `command`: exec on POSIX; run and forward the exit code on Windows.
+
+    Windows cannot replace a process. CPython 3.14's os.execve crashes there, and a working
+    one would still return the shell prompt while the TUI kept drawing on the same console.
+    """
+    if os.name != 'nt':
+        os.execve(command[0], command, env)
+    # Ctrl-C reaches every process on this console; only the TUI should decide what it means.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    return subprocess.run(command, env=env).returncode
+
+
 def stop_backend(process):
     # Own only this per-launch process group, never a shared/previous Codex session.
     try: os.killpg(process.pid, signal.SIGTERM)
@@ -160,7 +173,7 @@ def main():
             raise SystemExit(str(exc)) from exc
         except KeyboardInterrupt:
             return 130
-    os.execve(str(binary), [str(binary), '-c', 'check_for_update_on_startup=false', *args], env)
+    return hand_over([str(binary), '-c', 'check_for_update_on_startup=false', *args], env)
 
 
 if __name__ == '__main__':

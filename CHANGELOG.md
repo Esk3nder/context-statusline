@@ -10,7 +10,7 @@
 - Native agent row formatter and optional private, observer-only activity cache.
 - Event-based notices and diagnostics that leave unsupported forecasts unavailable.
 - Regression tests and Python/macOS/Linux CI.
-- `codex-statusline`: the same panel inside a pinned, patched Codex CLI 0.164.0 build, with a verified installer/launcher, reproducible patch export (`codex/export_patch.py`) and a native bundle workflow.
+- `codex-statusline`: the same panel inside a pinned, patched Codex CLI 0.164.0 build, with a verified installer/launcher, reproducible patch export (`codex/export_patch.py`) and a native bundle workflow. On Windows the launcher runs the bundled binary and forwards its exit code instead of `exec`, which Windows cannot do.
 
 ### Fixed
 - Use the supplied session cost estimate instead of repricing context tokens.
