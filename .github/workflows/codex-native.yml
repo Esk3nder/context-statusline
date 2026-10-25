@@ -46,7 +46,8 @@ jobs:
         shell: bash
         working-directory: ${{ runner.temp }}/codex-statusline-source/codex-rs
         # Same target and profile as upstream's packager, so the test reuses its build.
-        run: env -u NO_COLOR cargo test --target "$(rustc -vV | sed -n 's/^host: //p')" --release -p codex-tui --lib context_statusline
+        run: |
+          env -u NO_COLOR cargo test --target "$(rustc -vV | sed -n 's/^host: //p')" --release -p codex-tui --lib context_statusline
       - name: Verify the actual bundled launcher
         shell: bash
         run: |

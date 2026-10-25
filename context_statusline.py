@@ -21,6 +21,9 @@ from session_snapshot import config_snapshot, task_snapshot
 
 MAX_INPUT = 1024 * 1024
 FOOTER_INSET = 4  # COLUMNS is the whole terminal; Claude's footer spacing takes these cells.
+# A git lookup normally takes ~10 ms. A tighter limit dropped the branch on busy machines,
+# so the header flipped between the repository and the start folder from one refresh to the next.
+GIT_TIMEOUT = .25
 # All text uses the terminal's own foreground (plain, faint or bold) so it reads on
 # light and dark themes. Fixed colors mark only meters and alert markers; these
 # mid tones keep >= 3:1 against both white and near-black terminals.
@@ -211,10 +214,10 @@ def identity(data, width):
     if not branch and isinstance(cwd, str) and Path(cwd).is_dir():
         try:
             branch = clean(subprocess.run(['git', '-C', cwd, 'symbolic-ref', '--short', 'HEAD'],
-                           capture_output=True, text=True, timeout=.05, check=False).stdout.strip())
+                           capture_output=True, text=True, timeout=GIT_TIMEOUT, check=False).stdout.strip())
             if branch:  # Name the repository that owns this branch, not the session's start folder.
                 top = subprocess.run(['git', '-C', cwd, 'rev-parse', '--show-toplevel'],
-                                     capture_output=True, text=True, timeout=.05, check=False).stdout.strip()
+                                     capture_output=True, text=True, timeout=GIT_TIMEOUT, check=False).stdout.strip()
                 project = clean(Path(top).name) or project
         except (OSError, subprocess.TimeoutExpired):
             pass
