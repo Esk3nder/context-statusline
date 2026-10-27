@@ -1,5 +1,8 @@
 name: Test
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
 permissions:
   contents: read
 jobs:
@@ -8,7 +11,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.10'
+            python: '3.9'
           - os: ubuntu-latest
             python: '3.14'
           - os: macos-latest
@@ -22,6 +25,6 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: bash -n context-bar.sh
-      - run: python -m py_compile context_statusline.py activity.py session_snapshot.py
+      - run: git ls-files -z '*.py' | xargs -0 python -m py_compile
       - run: python -m unittest discover -s tests -v
       - run: python docs/examples/render.py && git diff --exit-code -- docs/examples

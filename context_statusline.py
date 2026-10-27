@@ -21,6 +21,9 @@ from session_snapshot import config_snapshot, task_snapshot
 
 MAX_INPUT = 1024 * 1024
 FOOTER_INSET = 4  # COLUMNS is the whole terminal; Claude's footer spacing takes these cells.
+# A git lookup normally takes ~10 ms. A tighter limit dropped the branch on busy machines,
+# so the header flipped between the repository and the start folder from one refresh to the next.
+GIT_TIMEOUT = .25
 # All text uses the terminal's own foreground (plain, faint or bold) so it reads on
 # light and dark themes. Fixed colors mark only meters and alert markers; these
 # mid tones keep >= 3:1 against both white and near-black terminals.
@@ -138,6 +141,13 @@ def metrics(data, now):
         reset = number(window.get('resets_at'))
         if usage is not None and (reset is None or reset > now):
             windows.append((usage, label, reset))
+    extra_windows = obj(data.get('rate_limits')).get('windows')
+    for raw in (extra_windows[:16] if isinstance(extra_windows, list) else []):
+        window = obj(raw)
+        usage = number(window.get('used_percentage'), maximum=100)
+        reset = number(window.get('resets_at'))
+        if usage is not None and (reset is None or reset > now):
+            windows.append((usage, clean(window.get('label') or 'QUOTA'), reset))
     quota = max(windows, key=lambda entry: entry[0]) if windows else (None, 'QUOTA', None)
     return pct, left, number(obj(data.get('cost')).get('total_cost_usd')), quota
 
@@ -197,17 +207,17 @@ def identity(data, width):
         extra += ' · fast'
     duration = number(obj(data.get('cost')).get('total_duration_ms'))
     if duration is not None:
-        extra += ' · ' + elapsed(duration / 1000) + ' session'
+        extra += ' · ' + elapsed(duration / 1000) + ' ' + clean(data.get('duration_label') or 'session')
     right = [segment(model), segment(extra, 'muted')]
     branch = clean(obj(data.get('worktree')).get('branch'))
     cwd = workspace.get('current_dir') or data.get('cwd')
     if not branch and isinstance(cwd, str) and Path(cwd).is_dir():
         try:
             branch = clean(subprocess.run(['git', '-C', cwd, 'symbolic-ref', '--short', 'HEAD'],
-                           capture_output=True, text=True, timeout=.05, check=False).stdout.strip())
+                           capture_output=True, text=True, timeout=GIT_TIMEOUT, check=False).stdout.strip())
             if branch:  # Name the repository that owns this branch, not the session's start folder.
                 top = subprocess.run(['git', '-C', cwd, 'rev-parse', '--show-toplevel'],
-                                     capture_output=True, text=True, timeout=.05, check=False).stdout.strip()
+                                     capture_output=True, text=True, timeout=GIT_TIMEOUT, check=False).stdout.strip()
                 project = clean(Path(top).name) or project
         except (OSError, subprocess.TimeoutExpired):
             pass
@@ -307,9 +317,9 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
     now = time.time() if now is None else now
     state, snapshot = state or {}, snapshot or {}
     pct, left, cost, (usage, label, reset) = metrics(data, now)
-    pct_text = f'{pct:g}%' if pct is not None else 'unavailable'
+    pct_text = f'{round(pct, 1):g}%' if pct is not None else 'unavailable'
     room = compact_tokens(left) + ' left' if left is not None else 'room unavailable'
-    quota_text = f'{usage:g}%' if usage is not None else 'unavailable'
+    quota_text = f'{round(usage, 1):g}%' if usage is not None else 'unavailable'
     reset_text = 'reset ' + elapsed(reset - now) if reset is not None else 'reset unavailable'
     price = 'unavailable' if cost is None else f'${cost:.4f}' if 0 < cost < .01 else f'${cost:.2f}'
     rows = identity(data, width)
@@ -319,6 +329,10 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
     meta = [segment(directory, 'muted')] if directory else []
     counts = [(config.get('instructions'), '{} CLAUDE.md'), (config.get('rules'), '{} rules'),
               (config.get('mcps'), '{} MCPs configured'), (config.get('hooks'), 'hooks on {} events')]
+    if data.get('host') == 'codex':
+        counts = [(config.get('instructions'), '{} AGENTS.md discovered'),
+                  (config.get('mcps'), '{} MCPs configured'), (config.get('hooks'), 'hooks on {} events'),
+                  (config.get('skills'), '{} skills discovered')]
     summary = ' · '.join(label.format(count) for count, label in counts if count)
     if summary:
         meta += [segment(('    ' if meta else '') + summary, 'dim')]
@@ -326,9 +340,10 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
         rows += wrap_parts(meta, width, 2)
     rows.append([segment(('-' if ascii_mode else '─') * width, 'rule')])
     quota_label = f'{label} QUOTA USED' if usage is not None else 'QUOTA'
+    cost_title = 'THREAD COST' if data.get('host') == 'codex' else 'SESSION COST'
     instruments = [('CONTEXT USED', pct, pct_text, room, True),
                    (quota_label, usage, quota_text, reset_text, False),
-                   ('SESSION COST', None, price, 'estimate', False)]
+                   (cost_title, None, price, clean(data.get('cost_label') or 'estimate'), False)]
     count = 3 if width >= 100 else 2 if width >= 60 else 1
     col = width // count
     for index in range(0, 3, count):
@@ -337,9 +352,9 @@ def render_main(data, width=80, color=True, ascii_mode=False, now=None, state=No
             cells = []
             for title, percent, value, detail, gradient in group:
                 parts = ([segment(title, 'muted')] if level == 0 else
-                         [segment(value)] if title == 'SESSION COST' and level == 1 else
+                         [segment(value)] if title == cost_title and level == 1 else
                          meter(percent, max(1, col - 5), gradient, ascii_mode) if level == 1 else
-                         [segment(detail, 'muted')] if title == 'SESSION COST' else
+                         [segment(detail, 'muted')] if title == cost_title else
                          [segment(value), segment(' · ' + detail, 'muted')])
                 cells.append(wrap_parts(parts, col))
             for line_index in range(max(map(len, cells))):

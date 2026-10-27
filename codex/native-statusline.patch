@@ -1,0 +1,4038 @@
+diff --git a/codex-rs/Cargo.lock b/codex-rs/Cargo.lock
+index 1eb38f328..117024168 100644
+--- a/codex-rs/Cargo.lock
++++ b/codex-rs/Cargo.lock
+@@ -287,7 +287,7 @@ checksum = "2a4385e2e34eb35d6b3efe798b9eb88096925d87726c0798709bf56d9ed84af3"
+ 
+ [[package]]
+ name = "app_test_support"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
+@@ -1888,7 +1888,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-agent-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-core",
+@@ -1900,7 +1900,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-agent-graph-store"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+  "codex-state",
+@@ -1915,7 +1915,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-agent-identity"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
+@@ -1935,7 +1935,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-agent-message-board-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -1958,7 +1958,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-agent-message-board-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-extension-api",
+  "codex-message-board",
+@@ -1972,7 +1972,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-agent-roles"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-config",
+  "codex-file-system",
+@@ -1985,7 +1985,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-analytics"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-app-server-protocol",
+  "codex-git-utils",
+@@ -2008,7 +2008,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-ansi-escape"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "ansi-to-tui",
+  "pretty_assertions",
+@@ -2019,7 +2019,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-api"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "assert_matches",
+@@ -2057,7 +2057,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-app-server"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "app_test_support",
+@@ -2175,7 +2175,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-app-server-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-app-server",
+  "codex-app-server-protocol",
+@@ -2202,7 +2202,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-app-server-daemon"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "blake3",
+@@ -2232,7 +2232,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-app-server-protocol"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-app-server-protocol-noop-macros",
+@@ -2266,11 +2266,11 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-app-server-protocol-noop-macros"
+-version = "0.0.0"
++version = "0.164.0"
+ 
+ [[package]]
+ name = "codex-app-server-test-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "clap",
+@@ -2292,7 +2292,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-app-server-transport"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "axum",
+  "base64 0.22.1",
+@@ -2335,7 +2335,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-apply-patch"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "assert_cmd",
+@@ -2355,7 +2355,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-arg0"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-apply-patch",
+@@ -2378,7 +2378,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-async-utils"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+  "rand 0.9.3",
+@@ -2388,7 +2388,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-attachment-store"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+  "serde",
+@@ -2398,7 +2398,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-aws-auth"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "aws-config",
+  "aws-credential-types",
+@@ -2424,7 +2424,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-backend-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-api",
+@@ -2444,7 +2444,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-backend-openapi-models"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "serde",
+  "serde_json",
+@@ -2453,7 +2453,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-build-info"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-install-context",
+  "pretty_assertions",
+@@ -2466,7 +2466,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-bwrap"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "cc",
+  "libc",
+@@ -2475,7 +2475,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-chatgpt"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "clap",
+@@ -2497,7 +2497,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-cli"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "app_test_support",
+@@ -2601,7 +2601,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-http-client",
+  "eventsource-stream",
+@@ -2615,7 +2615,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-cloud-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "async-stream",
+@@ -2639,7 +2639,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-cloud-config"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "chrono",
+@@ -2665,7 +2665,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-cloud-tasks"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -2698,7 +2698,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-cloud-tasks-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -2713,7 +2713,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-cloud-tasks-mock-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "chrono",
+  "codex-cloud-tasks-client",
+@@ -2722,7 +2722,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-code-mode"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-code-mode-protocol",
+  "codex-http-client",
+@@ -2746,7 +2746,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-code-mode-host"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "axum",
+@@ -2775,7 +2775,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-code-mode-protocol"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+  "glob",
+@@ -2793,7 +2793,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-code-mode-runtime"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "codex-code-mode-protocol",
+@@ -2811,11 +2811,11 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-collaboration-mode-templates"
+-version = "0.0.0"
++version = "0.164.0"
+ 
+ [[package]]
+ name = "codex-config"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
+@@ -2868,7 +2868,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-config-schema"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "clap",
+@@ -2877,7 +2877,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-connectors"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "arc-swap",
+@@ -2899,7 +2899,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-connectors-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-connectors",
+  "codex-core-plugins",
+@@ -2913,7 +2913,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-context-fragments"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+  "codex-protocol-test-support",
+@@ -2924,7 +2924,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-core"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "arc-swap",
+@@ -3070,7 +3070,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-core-api"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-analytics",
+  "codex-app-server-protocol",
+@@ -3093,7 +3093,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-core-plugin-common"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-utils-absolute-path",
+  "semver",
+@@ -3104,7 +3104,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-core-plugins"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -3161,7 +3161,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-diagnostics"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "libc",
+  "pretty_assertions",
+@@ -3169,7 +3169,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-direct-tool-timing"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-utils-critical-path",
+  "pretty_assertions",
+@@ -3177,7 +3177,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-exec"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "assert_cmd",
+@@ -3230,7 +3230,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-exec-server"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "arc-swap",
+@@ -3302,7 +3302,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-exec-server-protocol"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "codex-file-system",
+@@ -3320,7 +3320,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-exec-server-test-support"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-exec-server",
+@@ -3335,7 +3335,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-execpolicy"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "clap",
+@@ -3353,7 +3353,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-experimental-api-macros"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+@@ -3362,7 +3362,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-extension-api"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-api",
+  "codex-config",
+@@ -3385,7 +3385,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-extension-items"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-utils-absolute-path",
+  "pretty_assertions",
+@@ -3397,7 +3397,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-external-agent-migration"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "chrono",
+  "codex-analytics",
+@@ -3428,7 +3428,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-features"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-network-proxy",
+  "codex-protocol",
+@@ -3442,7 +3442,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-feedback"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "bytes",
+@@ -3470,7 +3470,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-file-search"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "clap",
+@@ -3486,7 +3486,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-file-system"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "bytes",
+  "codex-protocol",
+@@ -3500,7 +3500,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-file-watcher"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "notify",
+  "pretty_assertions",
+@@ -3511,7 +3511,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-git-attribution"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-backend-client",
+  "codex-extension-api",
+@@ -3524,7 +3524,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-git-utils"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -3552,7 +3552,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-goal-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -3577,7 +3577,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-guardian-context"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-context-fragments",
+  "codex-history",
+@@ -3590,7 +3590,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-guardian-reviewer"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-analytics",
+@@ -3615,7 +3615,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-guardian-v2"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-analytics",
+@@ -3654,7 +3654,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-history"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-protocol",
+@@ -3666,7 +3666,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-history-notes-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-analytics",
+  "codex-client",
+@@ -3691,7 +3691,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-home"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-extension-api",
+  "codex-utils-absolute-path",
+@@ -3703,7 +3703,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-hooks"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "async-channel",
+@@ -3732,7 +3732,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-http-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "bytes",
+  "codex-utils-cargo-bin",
+@@ -3772,7 +3772,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-image-generation-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "codex-api",
+@@ -3804,7 +3804,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-install-context"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-utils-absolute-path",
+  "codex-utils-home-dir",
+@@ -3817,7 +3817,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-keyring-store"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "keyring",
+  "pretty_assertions",
+@@ -3828,7 +3828,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-linux-sandbox"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "clap",
+  "codex-core",
+@@ -3857,7 +3857,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-lmstudio"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-core",
+  "codex-http-client",
+@@ -3871,7 +3871,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-login"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
+@@ -3917,7 +3917,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-mcp"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "arc-swap",
+@@ -3960,7 +3960,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-mcp-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "axum",
+@@ -3993,7 +3993,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-memories-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-core",
+  "codex-extension-api",
+@@ -4015,7 +4015,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-memories-read"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+  "codex-shell-command",
+@@ -4025,7 +4025,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-memories-write"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -4062,7 +4062,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-mermaid"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "insta",
+  "pretty_assertions",
+@@ -4071,7 +4071,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-message-board"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "caseless",
+@@ -4094,7 +4094,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-message-history"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-config",
+  "memchr",
+@@ -4108,7 +4108,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-model-provider"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "chrono",
+@@ -4142,7 +4142,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-model-provider-info"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-client",
+  "codex-http-client",
+@@ -4160,7 +4160,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-models-manager"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "chrono",
+  "codex-http-client",
+@@ -4179,7 +4179,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-multi-env-copy-file"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-config",
+@@ -4205,7 +4205,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-mxc-sandbox"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-network-proxy",
+@@ -4226,7 +4226,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-network-proxy"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
+@@ -4275,7 +4275,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-ollama"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "assert_matches",
+  "async-stream",
+@@ -4295,7 +4295,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-otel"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "bytes",
+  "chrono",
+@@ -4332,7 +4332,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-otel-trace-websocket"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "axum",
+@@ -4343,7 +4343,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-plugin"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-config",
+  "codex-core-plugin-common",
+@@ -4358,7 +4358,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-process-hardening"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "libc",
+  "pretty_assertions",
+@@ -4366,7 +4366,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-prompts"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-collaboration-mode-templates",
+@@ -4384,7 +4384,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-protocol"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chardetng",
+@@ -4430,14 +4430,14 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-protocol-test-support"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+ ]
+ 
+ [[package]]
+ name = "codex-queue-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-core",
+@@ -4458,7 +4458,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-realtime-webrtc"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-build-info",
+@@ -4477,7 +4477,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-response-debug-context"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "codex-api",
+@@ -4488,7 +4488,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-responses-api-proxy"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "bytes",
+@@ -4512,7 +4512,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-rmcp-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "axum",
+@@ -4563,7 +4563,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-rollout"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -4596,7 +4596,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-rollout-trace"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-code-mode",
+@@ -4612,7 +4612,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-runtime-agent-instance"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "codex-agent-identity",
+@@ -4638,7 +4638,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-sandboxing"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-mxc-sandbox",
+@@ -4666,7 +4666,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-secrets"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "age",
+  "anyhow",
+@@ -4687,7 +4687,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-shell-command"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
+@@ -4710,7 +4710,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-skills"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+  "codex-shell-command",
+@@ -4727,7 +4727,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-skills-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "assert_matches",
+  "blake3",
+@@ -4767,7 +4767,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-state"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "chrono",
+@@ -4795,7 +4795,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-stdio-to-uds"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-uds",
+@@ -4807,7 +4807,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-tcp-tunnel"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "bytes",
+@@ -4828,7 +4828,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-terminal-detection"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+  "tracing",
+@@ -4836,7 +4836,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-test-binary-support"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-arg0",
+  "tempfile",
+@@ -4844,7 +4844,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-thread-manager-sample"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "clap",
+@@ -4855,7 +4855,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-thread-store"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "chrono",
+  "codex-app-server-protocol",
+@@ -4886,7 +4886,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-tools"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "bitflags 2.13.1",
+  "codex-attachment-store",
+@@ -4911,7 +4911,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-tui"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "app_test_support",
+@@ -4970,6 +4970,7 @@ dependencies = [
+  "codex-utils-path",
+  "codex-utils-path-uri",
+  "codex-utils-plugins",
++ "codex-utils-pty",
+  "codex-utils-sandbox-summary",
+  "codex-utils-sleep-inhibitor",
+  "codex-utils-string",
+@@ -5039,7 +5040,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-uds"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "async-io",
+  "libc",
+@@ -5053,7 +5054,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-user-verification"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "block2",
+@@ -5074,7 +5075,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-absolute-path"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "dirs",
+  "dunce",
+@@ -5088,14 +5089,14 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-approval-presets"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+ ]
+ 
+ [[package]]
+ name = "codex-utils-audio"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "codex-protocol",
+@@ -5109,7 +5110,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-cache"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "lru",
+  "sha1 0.10.6",
+@@ -5118,7 +5119,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-cargo-bin"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "assert_cmd",
+  "runfiles",
+@@ -5127,7 +5128,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-cli"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "clap",
+  "codex-protocol",
+@@ -5139,22 +5140,22 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-critical-path"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+ ]
+ 
+ [[package]]
+ name = "codex-utils-elapsed"
+-version = "0.0.0"
++version = "0.164.0"
+ 
+ [[package]]
+ name = "codex-utils-fuzzy-match"
+-version = "0.0.0"
++version = "0.164.0"
+ 
+ [[package]]
+ name = "codex-utils-git-discovery"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-git-utils",
+  "codex-utils-absolute-path",
+@@ -5167,7 +5168,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-home-dir"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-utils-absolute-path",
+  "dirs",
+@@ -5177,7 +5178,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-image"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "codex-utils-cache",
+@@ -5191,7 +5192,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-json-to-toml"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+  "serde_json",
+@@ -5200,7 +5201,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-oss"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-core",
+  "codex-lmstudio",
+@@ -5210,7 +5211,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-output-truncation"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+  "codex-utils-string",
+@@ -5220,7 +5221,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-path"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-utils-absolute-path",
+  "dunce",
+@@ -5231,7 +5232,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-path-uri"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "base64 0.22.1",
+  "codex-utils-absolute-path",
+@@ -5247,7 +5248,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-plugins"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-exec-server",
+  "codex-exec-server-protocol",
+@@ -5261,7 +5262,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-process"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+  "tokio",
+@@ -5269,7 +5270,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-pty"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-utils-cargo-bin",
+@@ -5288,7 +5289,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-readiness"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "assert_matches",
+  "thiserror 2.0.18",
+@@ -5298,7 +5299,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-redacted-string"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "schemars 0.8.22",
+  "serde",
+@@ -5306,14 +5307,14 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-rustls-provider"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "rustls",
+ ]
+ 
+ [[package]]
+ name = "codex-utils-sandbox-summary"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-protocol",
+  "codex-utils-absolute-path",
+@@ -5323,7 +5324,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-sleep-inhibitor"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "core-foundation 0.9.4",
+  "libc",
+@@ -5333,14 +5334,14 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-stream-parser"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+ ]
+ 
+ [[package]]
+ name = "codex-utils-string"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+  "regex-lite",
+@@ -5350,14 +5351,14 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-utils-template"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+ ]
+ 
+ [[package]]
+ name = "codex-v8-poc"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "pretty_assertions",
+  "v8",
+@@ -5365,7 +5366,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-voice-host"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-install-context",
+@@ -5392,7 +5393,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-web-search-extension"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-api",
+  "codex-core",
+@@ -5414,7 +5415,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-websocket-auth"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
+@@ -5433,7 +5434,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-websocket-client"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-http-client",
+  "codex-utils-rustls-provider",
+@@ -5449,7 +5450,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-windows-sandbox"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "base64 0.22.1",
+@@ -5479,7 +5480,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-windows-sandbox-service"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-cloud-config",
+@@ -5497,14 +5498,14 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-windows-sandbox-test-support"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "dirs",
+ ]
+ 
+ [[package]]
+ name = "codex-workload-identity"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "codex-http-client",
+  "pretty_assertions",
+@@ -5519,7 +5520,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "codex-worktree"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "codex-git-utils",
+@@ -5772,7 +5773,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "core_test_support"
+-version = "0.0.0"
++version = "0.164.0"
+ dependencies = [
+  "anyhow",
+  "assert_cmd",
+diff --git a/codex-rs/tui/Cargo.toml b/codex-rs/tui/Cargo.toml
+index 47968b869..928f4e2ed 100644
+--- a/codex-rs/tui/Cargo.toml
++++ b/codex-rs/tui/Cargo.toml
+@@ -74,6 +74,7 @@ codex-utils-home-dir = { workspace = true }
+ codex-utils-oss = { workspace = true }
+ codex-utils-path = { workspace = true }
+ codex-utils-path-uri = { workspace = true }
++codex-utils-pty = { workspace = true }
+ codex-utils-plugins = { workspace = true }
+ codex-utils-sandbox-summary = { workspace = true }
+ codex-utils-sleep-inhibitor = { workspace = true }
+diff --git a/codex-rs/tui/src/app.rs b/codex-rs/tui/src/app.rs
+index 093a6af1b..890e99d80 100644
+--- a/codex-rs/tui/src/app.rs
++++ b/codex-rs/tui/src/app.rs
+@@ -1269,6 +1269,7 @@ impl App {
+                 rendered_area = area;
+                 chat_widget.render(area, frame.buffer);
+                 self.chat_widget.note_rendered_width(area.width);
++                self.chat_widget.note_screen_height(screen_size.height);
+                 if let Some((x, y)) = chat_widget.cursor_pos(area) {
+                     frame.set_cursor_style(chat_widget.cursor_style(area));
+                     frame.set_cursor_position((x, y));
+diff --git a/codex-rs/tui/src/app/app_server_events.rs b/codex-rs/tui/src/app/app_server_events.rs
+index cd8f1678d..818337a74 100644
+--- a/codex-rs/tui/src/app/app_server_events.rs
++++ b/codex-rs/tui/src/app/app_server_events.rs
+@@ -269,6 +269,15 @@ impl App {
+                 .entry(thread_id)
+                 .or_default();
+         }
++        // The widget observes its own thread when a notification is delivered to it, including
++        // ones buffered before attachment. Other threads, such as child agents, never reach the
++        // widget's handler and are observed here instead.
++        if let ServerNotificationThreadTarget::Thread(thread_id) =
++            server_notification_thread_target(&notification)
++            && self.chat_widget.thread_id() != Some(thread_id)
++        {
++            self.chat_widget.observe_custom_statusline(&notification);
++        }
+         self.track_agents_overview_notification(&notification);
+         // Retained blank sessions stay subscribed after their event channels are cleared.
+         if let ServerNotification::ThreadSettingsUpdated(settings) = &notification
+diff --git a/codex-rs/tui/src/app/owned_transcript.rs b/codex-rs/tui/src/app/owned_transcript.rs
+index 7c43e1799..e37d447db 100644
+--- a/codex-rs/tui/src/app/owned_transcript.rs
++++ b/codex-rs/tui/src/app/owned_transcript.rs
+@@ -180,6 +180,7 @@ impl App {
+         let max_composer_height = ((u32::from(screen_size.height) * 2 / 3) as u16)
+             .max(8)
+             .min(screen_size.height);
++        chat_widget.note_screen_height(screen_size.height);
+         let bottom =
+             chat_widget.bottom_pane_renderable(crate::bottom_pane::ComposerRenderOptions {
+                 max_height: Some(max_composer_height),
+diff --git a/codex-rs/tui/src/app/session_lifecycle.rs b/codex-rs/tui/src/app/session_lifecycle.rs
+index 811d97176..0ce560eae 100644
+--- a/codex-rs/tui/src/app/session_lifecycle.rs
++++ b/codex-rs/tui/src/app/session_lifecycle.rs
+@@ -740,6 +740,8 @@ impl App {
+             .set_task_mentions_enabled(app_server.task_tools_available(thread_id));
+         self.chat_widget
+             .note_rendered_width(tui.terminal.last_known_screen_size.width);
++        self.chat_widget
++            .note_screen_height(tui.terminal.last_known_screen_size.height);
+         let external_writer = self
+             .thread_event_channels
+             .get(&thread_id)
+@@ -1187,6 +1189,8 @@ impl App {
+             .set_task_mentions_enabled(started.task_tools_available);
+         self.chat_widget
+             .note_rendered_width(tui.terminal.last_known_screen_size.width);
++        self.chat_widget
++            .note_screen_height(tui.terminal.last_known_screen_size.height);
+         if started.blocks_direct_input {
+             self.mark_primary_thread_parent_owned(started.session.thread_id);
+         }
+diff --git a/codex-rs/tui/src/app/snapshots/codex_tui__app__daemon_menu__tests__daemon_cli_confirmation.snap b/codex-rs/tui/src/app/snapshots/codex_tui__app__daemon_menu__tests__daemon_cli_confirmation.snap
+index 4a9461199..b616e4674 100644
+--- a/codex-rs/tui/src/app/snapshots/codex_tui__app__daemon_menu__tests__daemon_cli_confirmation.snap
++++ b/codex-rs/tui/src/app/snapshots/codex_tui__app__daemon_menu__tests__daemon_cli_confirmation.snap
+@@ -1,6 +1,6 @@
+ ---
+ source: tui/src/app/daemon_menu_tests.rs
+-assertion_line: 125
++assertion_line: 126
+ expression: "render_bottom_popup(&app.chat_widget,\nwidth).replace(r\"C:\\cli-build\\bin\\codex\", \"/x/cli-build/bin/codex\")"
+ ---
+   Agent command center  Group: Project  g
+@@ -11,7 +11,7 @@ expression: "render_bottom_popup(&app.chat_widget,\nwidth).replace(r\"C:\\cli-bu
+                                                           │
+ 
+                 Update daemon and exit Codex?
+-                Use this CLI package v0.0.0 from /x/cli-build/bin/codex. Copy the
++                Use this CLI package v0.164.0 from /x/cli-build/bin/codex. Copy the
+                 complete package and pin it against automatic updates.
+                 This may restart the daemon and interrupt active or queued work.
+                 Codex exits to update in this terminal. Relaunch it afterward.
+diff --git a/codex-rs/tui/src/app/snapshots/codex_tui__app__owned_transcript__empty_state_animation_tests__fresh_thread_header.snap b/codex-rs/tui/src/app/snapshots/codex_tui__app__owned_transcript__empty_state_animation_tests__fresh_thread_header.snap
+index 789d6e4bd..23d2849cc 100644
+--- a/codex-rs/tui/src/app/snapshots/codex_tui__app__owned_transcript__empty_state_animation_tests__fresh_thread_header.snap
++++ b/codex-rs/tui/src/app/snapshots/codex_tui__app__owned_transcript__empty_state_animation_tests__fresh_thread_header.snap
+@@ -4,7 +4,7 @@ expression: "format!(\"enabled:\\n{}\\n---\\ndisabled:\\n{}\", text(after), text
+ ---
+ enabled:
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+ 
+@@ -50,7 +50,7 @@ enabled:
+ ---
+ disabled:
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+ 
+diff --git a/codex-rs/tui/src/app/snapshots/codex_tui__app__tests__app_server_thread_replacement_clears_previous_transcript_before_replay-2.snap b/codex-rs/tui/src/app/snapshots/codex_tui__app__tests__app_server_thread_replacement_clears_previous_transcript_before_replay-2.snap
+index 8aa1bca71..80e0bfbbf 100644
+--- a/codex-rs/tui/src/app/snapshots/codex_tui__app__tests__app_server_thread_replacement_clears_previous_transcript_before_replay-2.snap
++++ b/codex-rs/tui/src/app/snapshots/codex_tui__app__tests__app_server_thread_replacement_clears_previous_transcript_before_replay-2.snap
+@@ -1,10 +1,10 @@
+ ---
+ source: tui/src/app/tests.rs
+-assertion_line: 6513
++assertion_line: 6971
+ expression: rendered
+ ---
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      <thread cwd>
+ 
+ 
+diff --git a/codex-rs/tui/src/app/startup.rs b/codex-rs/tui/src/app/startup.rs
+index 85e4dc1ff..beb649836 100644
+--- a/codex-rs/tui/src/app/startup.rs
++++ b/codex-rs/tui/src/app/startup.rs
+@@ -840,6 +840,7 @@ impl App {
+             start_in_agents_overview = true;
+         }
+         chat_widget.note_rendered_width(tui.terminal.last_known_screen_size.width);
++        chat_widget.note_screen_height(tui.terminal.last_known_screen_size.height);
+         if pending_startup_thread_start && !start_in_agents_overview {
+             chat_widget
+                 .empty_state_animation
+diff --git a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__active_reconnect__unavailable_conversation.snap b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__active_reconnect__unavailable_conversation.snap
+index 335071a07..b37853d5c 100644
+--- a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__active_reconnect__unavailable_conversation.snap
++++ b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__active_reconnect__unavailable_conversation.snap
+@@ -3,8 +3,6 @@ source: tui/src/app/tests/active_reconnect_tests.rs
+ expression: "format!(\"{history}\\n{}\",\nrender_bottom_popup(&app.chat_widget,\n80)).replace(&test_path_buf(\"/tmp/project\").display().to_string(),\n\"/tmp/project\")"
+ ---
+ • This conversation is unavailable. Its cached transcript and draft remain here; input is paused. Open the agent picker or return to the parent to continue.
+-⚠ A background Codex service is running v2.0.0, different from your Codex CLI
+-  v0.0.0.
+ › unavailable draft
+ 
+   gpt-test default · /tmp/project
+diff --git a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__navigation_reconnect__daemon_command_center_vanished_rename.snap b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__navigation_reconnect__daemon_command_center_vanished_rename.snap
+index a8997b370..af12ff75e 100644
+--- a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__navigation_reconnect__daemon_command_center_vanished_rename.snap
++++ b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__navigation_reconnect__daemon_command_center_vanished_rename.snap
+@@ -25,4 +25,4 @@ expression: "render_bottom_popup(&app.chat_widget, 100)"
+                                                           │
+                                                           │
+                                                           │
+-  Service v2.0.0 ≠ Codex CLI v0.0.0 · /daemon
++  ? help  esc back  ↑/↓ move  enter open  n new
+diff --git a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_buffered_replay_reconciles_captions.snap b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_buffered_replay_reconciles_captions.snap
+index ab3a8c84c..ba16c010a 100644
+--- a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_buffered_replay_reconciles_captions.snap
++++ b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_buffered_replay_reconciles_captions.snap
+@@ -1,10 +1,10 @@
+ ---
+ source: tui/src/app/tests/realtime_requests.rs
+-assertion_line: 889
++assertion_line: 891
+ expression: "normalize_voice_snapshot_directory(&rendered, &app.config.cwd)"
+ ---
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+   To get started, describe a task or try one of these commands:
+diff --git a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_completed_after_thread_switch.snap b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_completed_after_thread_switch.snap
+index 2ecde209a..aa2f53518 100644
+--- a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_completed_after_thread_switch.snap
++++ b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_completed_after_thread_switch.snap
+@@ -1,10 +1,10 @@
+ ---
+ source: tui/src/app/tests/realtime_requests.rs
+-assertion_line: 1093
++assertion_line: 1096
+ expression: "normalize_voice_snapshot_directory(&rendered, &app.config.cwd)"
+ ---
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+   To get started, describe a task or try one of these commands:
+diff --git a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_partial_completed_after_thread_switch.snap b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_partial_completed_after_thread_switch.snap
+index bfd8b46a6..4a56aa896 100644
+--- a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_partial_completed_after_thread_switch.snap
++++ b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_partial_completed_after_thread_switch.snap
+@@ -14,7 +14,7 @@ Restored owner:
+ 
+   gpt-test default · /tmp/project
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+   To get started, describe a task or try one of these commands:
+diff --git a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_replay_reconciles_matching_captions.snap b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_replay_reconciles_matching_captions.snap
+index 0dfd7333b..c81b61060 100644
+--- a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_replay_reconciles_matching_captions.snap
++++ b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__realtime_requests__voice_replay_reconciles_matching_captions.snap
+@@ -1,10 +1,10 @@
+ ---
+ source: tui/src/app/tests/realtime_requests.rs
+-assertion_line: 716
++assertion_line: 718
+ expression: "normalize_voice_snapshot_directory(&rendered, &app.config.cwd)"
+ ---
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+   To get started, describe a task or try one of these commands:
+diff --git a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__session_lifecycle_requests__new_session_tests__widget_replacement_preserves_mention_usage_with_history_disabled.snap b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__session_lifecycle_requests__new_session_tests__widget_replacement_preserves_mention_usage_with_history_disabled.snap
+index 6a47bf2b7..c3ee87327 100644
+--- a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__session_lifecycle_requests__new_session_tests__widget_replacement_preserves_mention_usage_with_history_disabled.snap
++++ b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__session_lifecycle_requests__new_session_tests__widget_replacement_preserves_mention_usage_with_history_disabled.snap
+@@ -2,7 +2,7 @@
+ source: tui/src/app/tests/new_session_tests.rs
+ expression: "normalize_snapshot_paths(render_bottom_popup(&app.chat_widget, 80))"
+ ---
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+ 
+diff --git a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__startup_frame_tests__startup_tip_in_transcript.snap b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__startup_frame_tests__startup_tip_in_transcript.snap
+index d45000ee7..49d1cd704 100644
+--- a/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__startup_frame_tests__startup_tip_in_transcript.snap
++++ b/codex-rs/tui/src/app/tests/snapshots/codex_tui__app__tests__startup_frame_tests__startup_tip_in_transcript.snap
+@@ -4,7 +4,7 @@ expression: "normalize_snapshot_paths(normalize_agent_center_snapshot(snapshots.
+ ---
+ 80 columns
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+ • Conversation continues here.
+@@ -26,7 +26,7 @@ expression: "normalize_snapshot_paths(normalize_agent_center_snapshot(snapshots.
+ 
+ 32 columns
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+ • Conversation continues here.
+diff --git a/codex-rs/tui/src/bottom_pane/request_user_input/snapshots/codex_tui__bottom_pane__request_user_input__render__tests__request_user_input_halfwidth_sound_marks_truncation.snap b/codex-rs/tui/src/bottom_pane/request_user_input/snapshots/codex_tui__bottom_pane__request_user_input__render__tests__request_user_input_halfwidth_sound_marks_truncation.snap
+index 1efcc1a62..4dc0fc13b 100644
+--- a/codex-rs/tui/src/bottom_pane/request_user_input/snapshots/codex_tui__bottom_pane__request_user_input__render__tests__request_user_input_halfwidth_sound_marks_truncation.snap
++++ b/codex-rs/tui/src/bottom_pane/request_user_input/snapshots/codex_tui__bottom_pane__request_user_input__render__tests__request_user_input_halfwidth_sound_marks_truncation.snap
+@@ -22,12 +22,12 @@ Buffer {
+ [
+     Line::from_iter([
+         Span::from("ab").bold(),
+-        Span::from("ｶﾞ").cyan(),
++        Span::from("ｶ\u{ff9e}").cyan(),
+         Span::from("…").cyan(),
+     ]),
+     Line::from_iter([
+         Span::from("xy").bold(),
+-        Span::from("ﾊﾟ").magenta(),
++        Span::from("ﾊ\u{ff9f}").magenta(),
+         Span::from("…").magenta(),
+     ]),
+ ]
+diff --git a/codex-rs/tui/src/chatwidget.rs b/codex-rs/tui/src/chatwidget.rs
+index 4b9d285d2..588351ac4 100644
+--- a/codex-rs/tui/src/chatwidget.rs
++++ b/codex-rs/tui/src/chatwidget.rs
+@@ -261,6 +261,7 @@ mod config_panel;
+ mod connector_mentions;
+ mod connectors;
+ mod constructor;
++mod context_statusline;
+ mod dynamic_activity;
+ mod empty_state_policy;
+ pub(crate) use self::connectors::ConnectorScopeGeneration;
+@@ -520,6 +521,7 @@ pub(crate) enum ExternalEditorState {
+ /// (which view gets Ctrl+C), while `ChatWidget` owns process-level decisions such as interrupting
+ /// active work, arming the double-press quit shortcut, and requesting shutdown-first exit.
+ pub(crate) struct ChatWidget {
++    custom_statusline: Option<crate::context_statusline::Panel>,
+     pub(crate) empty_state_animation:
+         std::cell::RefCell<crate::empty_state_animation::EmptyStateAnimation>,
+     pub(crate) daybreak_enabled: bool,
+@@ -725,6 +727,8 @@ pub(crate) struct ChatWidget {
+     // Runtime metrics accumulated across delta snapshots for the active turn.
+     turn_runtime_metrics: RuntimeMetricsSummary,
+     last_rendered_width: std::cell::Cell<Option<u16>>,
++    // Terminal height from the last draw; bounds the external status panel.
++    last_screen_height: std::cell::Cell<Option<u16>>,
+     // Feedback sink for /feedback
+     feedback: codex_feedback::CodexFeedback,
+     // Current session rollout path (if known)
+@@ -1141,6 +1145,8 @@ impl ChatWidget {
+                 self.token_info = None;
+             }
+         }
++        // The external panel mirrors the native context widget, so it follows every update.
++        self.refresh_custom_statusline();
+     }
+ 
+     fn apply_token_info(&mut self, info: TokenUsageInfo) {
+@@ -1178,6 +1184,7 @@ impl ChatWidget {
+                     self.token_info = None;
+                 }
+             }
++            self.refresh_custom_statusline();
+         }
+     }
+ 
+diff --git a/codex-rs/tui/src/chatwidget/constructor.rs b/codex-rs/tui/src/chatwidget/constructor.rs
+index 8d4bbbd18..d642168da 100644
+--- a/codex-rs/tui/src/chatwidget/constructor.rs
++++ b/codex-rs/tui/src/chatwidget/constructor.rs
+@@ -102,6 +102,9 @@ impl ChatWidget {
+             app_event_tx: app_event_tx.clone(),
+             frame_requester: frame_requester.clone(),
+             codex_op_target,
++            custom_statusline: crate::context_statusline::Panel::configured(
++                frame_requester.clone(),
++            ),
+             bottom_pane: BottomPane::new(BottomPaneParams {
+                 frame_requester,
+                 app_event_tx,
+@@ -260,6 +263,7 @@ impl ChatWidget {
+             quit_shortcut_key: None,
+             turn_runtime_metrics: RuntimeMetricsSummary::default(),
+             last_rendered_width: std::cell::Cell::new(None),
++            last_screen_height: std::cell::Cell::new(None),
+             feedback,
+             current_rollout_path: None,
+             current_cwd,
+diff --git a/codex-rs/tui/src/chatwidget/context_statusline.rs b/codex-rs/tui/src/chatwidget/context_statusline.rs
+new file mode 100644
+index 000000000..e6a7fd215
+--- /dev/null
++++ b/codex-rs/tui/src/chatwidget/context_statusline.rs
+@@ -0,0 +1,43 @@
++//! Snapshot only allowlisted native fields for the optional external panel.
++use super::*;
++use serde_json::json;
++
++impl ChatWidget {
++    pub(crate) fn observe_custom_statusline(&self, notification: &ServerNotification) {
++        if let Some(panel) = &self.custom_statusline {
++            panel.observe(notification, self.thread_id.map(|id| id.to_string()));
++        }
++    }
++
++    pub(super) fn refresh_custom_statusline(&self) {
++        let Some(panel) = &self.custom_statusline else {
++            return;
++        };
++        let context = self
++            .token_info
++            .as_ref()
++            .filter(|_| !self.token_usage_pending)
++            .map(|info| {
++                json!({
++                    "used_tokens": info.last_token_usage.total_tokens,
++                    "window_tokens": info.model_context_window
++                })
++            });
++        panel.update(json!({
++            "schema_version": 1, "host":"codex", "session_id":self.thread_id,
++            "model":self.current_model(), "effort":self.current_reasoning_effort(),
++            "cwd":self.config.cwd.to_string_lossy(), "branch":self.status_line_branch,
++            "context":context,
++            "estimated_thread_cost_usd": self.thread_usage.estimate.as_ref().and_then(|usage|
++                usage.estimated_usage_usd_micros.map(|cost| cost as f64 / 1_000_000.0)),
++            "configuration":{"mcps": self.config.mcp_servers.get().len()},
++            "agent_roles": self.collab_agent_metadata.iter().take(64).map(|(id, meta)|
++                (id.to_string(), meta.agent_role.as_deref().or(meta.agent_nickname.as_deref()).unwrap_or("agent"))
++            ).collect::<std::collections::BTreeMap<_,_>>()
++        }));
++    }
++}
++
++#[cfg(test)]
++#[path = "context_statusline_tests.rs"]
++mod tests;
+diff --git a/codex-rs/tui/src/chatwidget/context_statusline_tests.rs b/codex-rs/tui/src/chatwidget/context_statusline_tests.rs
+new file mode 100644
+index 000000000..f07c8e92a
+--- /dev/null
++++ b/codex-rs/tui/src/chatwidget/context_statusline_tests.rs
+@@ -0,0 +1,205 @@
++use super::*;
++use crate::chatwidget::tests::make_chatwidget_manual_with_sender;
++use crate::context_statusline::Panel;
++use pretty_assertions::assert_eq;
++use tempfile::tempdir;
++
++#[tokio::test]
++async fn embedded_panel_preserves_composer_and_disappears_before_input_when_short() {
++    let (mut widget, _, _, _) = make_chatwidget_manual_with_sender().await;
++    let dir = tempdir().unwrap();
++    let script = dir.path().join("renderer.py");
++    std::fs::write(&script, "print('CUSTOM CONTEXT 37%\\nCUSTOM QUOTA 22%')").unwrap();
++    widget.custom_statusline = Some(Panel::new(
++        vec![
++            if cfg!(windows) {
++                "python".into()
++            } else {
++                "python3".into()
++            },
++            script.to_string_lossy().into(),
++        ],
++        widget.frame_requester.clone(),
++    ));
++    widget.refresh_custom_statusline();
++    widget.handle_paste("draft stays here".into());
++    let options = crate::bottom_pane::ComposerRenderOptions::default;
++    for _ in 0..100 {
++        let bottom = widget.bottom_pane_renderable(options());
++        bottom.desired_height(80);
++        let mut buffer = ratatui::buffer::Buffer::empty(Rect::new(0, 0, 80, 12));
++        bottom.render(buffer.area, &mut buffer);
++        let text = buffer
++            .content
++            .iter()
++            .map(ratatui::buffer::Cell::symbol)
++            .collect::<String>();
++        if text.contains("CUSTOM CONTEXT") {
++            assert!(text.contains("draft stays here"));
++            let rendered = buffer
++                .content
++                .chunks(80)
++                .map(|row| {
++                    row.iter()
++                        .map(ratatui::buffer::Cell::symbol)
++                        .collect::<String>()
++                        .trim_end()
++                        .to_owned()
++                })
++                .collect::<Vec<_>>()
++                .join("\n")
++                .replace(&widget.config.cwd.display().to_string(), "/tmp/project");
++            insta::assert_snapshot!(rendered);
++            let mut tiny = ratatui::buffer::Buffer::empty(Rect::new(0, 0, 80, 3));
++            bottom.render(tiny.area, &mut tiny);
++            let tiny_text = tiny
++                .content
++                .iter()
++                .map(ratatui::buffer::Cell::symbol)
++                .collect::<String>();
++            assert!(tiny_text.contains("draft stays here"));
++            assert!(!tiny_text.contains("CUSTOM CONTEXT"));
++            assert_eq!(bottom.cursor_pos(tiny.area).is_some(), true);
++            return;
++        }
++        tokio::time::sleep(Duration::from_millis(10)).await;
++    }
++    panic!("Custom renderer output was not embedded in the composer layout");
++}
++
++fn idle_panel(widget: &ChatWidget) -> Panel {
++    // An empty command never spawns a renderer; the payload is inspected directly.
++    Panel::new(vec![], widget.frame_requester.clone())
++}
++
++fn panel_payload(widget: &ChatWidget) -> serde_json::Value {
++    widget
++        .custom_statusline
++        .as_ref()
++        .unwrap()
++        .payload_for_test()
++}
++
++fn token_info(total_tokens: i64) -> crate::token_usage::TokenUsageInfo {
++    let usage = crate::token_usage::TokenUsage {
++        total_tokens,
++        ..Default::default()
++    };
++    crate::token_usage::TokenUsageInfo {
++        total_token_usage: usage.clone(),
++        last_token_usage: usage,
++        model_context_window: Some(100_000),
++    }
++}
++
++#[tokio::test]
++async fn token_usage_updates_reach_the_panel_during_a_turn() {
++    let (mut widget, _, _, _) = make_chatwidget_manual_with_sender().await;
++    widget.custom_statusline = Some(idle_panel(&widget));
++    widget.set_token_info(Some(token_info(12_000)));
++    assert_eq!(panel_payload(&widget)["context"]["used_tokens"], 12_000);
++    widget.set_token_info(Some(token_info(40_000)));
++    assert_eq!(panel_payload(&widget)["context"]["used_tokens"], 40_000);
++    widget.set_token_info(None);
++    assert!(panel_payload(&widget)["context"].is_null());
++}
++
++#[tokio::test]
++async fn panel_keeps_the_branch_lookup_alive_without_a_native_branch_item() {
++    let (mut widget, _, _, _) = make_chatwidget_manual_with_sender().await;
++    // A native status line without a git-branch item.
++    widget.local_settings.tui.status_line = Some(vec!["model-name".into()]);
++    widget.refresh_status_surfaces();
++    // Without the panel the shared branch cache is dropped and never looked up.
++    assert!(widget.status_line_branch_cwd.is_none());
++    widget.custom_statusline = Some(idle_panel(&widget));
++    widget.refresh_status_surfaces();
++    assert_eq!(
++        widget.status_line_branch_cwd.as_deref(),
++        Some(widget.config.cwd.as_path())
++    );
++}
++
++#[tokio::test]
++async fn panel_never_takes_more_than_a_third_of_the_screen() {
++    let (mut widget, _, _, _) = make_chatwidget_manual_with_sender().await;
++    widget.custom_statusline = Some(idle_panel(&widget));
++    widget
++        .custom_statusline
++        .as_ref()
++        .unwrap()
++        // The panel is inset by two columns on each side of an 80-column layout.
++        .set_lines_for_test((0..60).map(|i| format!("ROW {i}").into()).collect(), 76);
++    let options = crate::bottom_pane::ComposerRenderOptions::default;
++    let composer_only = {
++        let saved = widget.custom_statusline.take();
++        let height = widget.bottom_pane_renderable(options()).desired_height(80);
++        widget.custom_statusline = saved;
++        height
++    };
++    widget.note_screen_height(30);
++    let bottom = widget.bottom_pane_renderable(options());
++    assert_eq!(bottom.desired_height(80), composer_only + 10);
++    let mut buffer = ratatui::buffer::Buffer::empty(Rect::new(0, 0, 80, 30));
++    bottom.render(Rect::new(0, 0, 80, composer_only + 10), &mut buffer);
++    let text = buffer
++        .content
++        .iter()
++        .map(ratatui::buffer::Cell::symbol)
++        .collect::<String>();
++    assert!(text.contains("ROW 9"));
++    assert!(!text.contains("ROW 10"));
++    // Owned transcripts hand down a budget for the whole bottom region; the composer wins.
++    let capped = widget.bottom_pane_renderable(crate::bottom_pane::ComposerRenderOptions {
++        max_height: Some(composer_only + 2),
++        ..Default::default()
++    });
++    assert_eq!(capped.desired_height(80), composer_only + 2);
++}
++
++#[tokio::test]
++async fn live_plan_updates_delivered_to_the_widget_reach_the_panel() {
++    let (mut widget, _, _, _) = make_chatwidget_manual_with_sender().await;
++    let thread_id = ThreadId::new();
++    widget.thread_id = Some(thread_id);
++    widget.custom_statusline = Some(idle_panel(&widget));
++    // Buffered startup notifications arrive live, not as replays, once the widget is attached.
++    widget.handle_server_notification(
++        ServerNotification::TurnPlanUpdated(
++            codex_app_server_protocol::TurnPlanUpdatedNotification {
++                thread_id: thread_id.to_string(),
++                turn_id: "turn-1".into(),
++                explanation: None,
++                plan: vec![codex_app_server_protocol::TurnPlanStep {
++                    step: "write the test".into(),
++                    status: codex_app_server_protocol::TurnPlanStepStatus::InProgress,
++                }],
++            },
++        ),
++        /*replay_kind*/ None,
++    );
++    let plan = widget.custom_statusline.as_ref().unwrap().plan_for_test();
++    assert_eq!(plan.len(), 1);
++    assert_eq!(plan[0]["step"], "write the test");
++}
++
++#[tokio::test]
++async fn replayed_history_items_reach_the_panel() {
++    let (mut widget, _, _, _) = make_chatwidget_manual_with_sender().await;
++    widget.thread_id = Some(ThreadId::new());
++    widget.custom_statusline = Some(idle_panel(&widget));
++    let item: ThreadItem = serde_json::from_value(serde_json::json!({
++        "type":"mcpToolCall","id":"mcp-1","server":"github","tool":"search","status":"completed",
++        "arguments":{},"result":null,"error":null,"durationMs":null,"mcpApp":null,"contentItems":null
++    }))
++    .unwrap();
++    widget.replay_thread_item(item, "turn-1".into(), ReplayKind::ResumeInitialMessages);
++    assert_eq!(
++        widget
++            .custom_statusline
++            .as_ref()
++            .unwrap()
++            .used_mcps_for_test(),
++        vec!["github".to_owned()]
++    );
++}
+diff --git a/codex-rs/tui/src/chatwidget/protocol.rs b/codex-rs/tui/src/chatwidget/protocol.rs
+index 5bd2254d8..6e367be85 100644
+--- a/codex-rs/tui/src/chatwidget/protocol.rs
++++ b/codex-rs/tui/src/chatwidget/protocol.rs
+@@ -20,6 +20,9 @@ impl ChatWidget {
+         {
+             return;
+         }
++        // Every notification delivered to this widget, live or replayed, is observed exactly once
++        // here. Threads that never reach this widget are observed at the app level.
++        self.observe_custom_statusline(&notification);
+         let was_replaying_turn_completion = self.thread_usage.replaying_turn_completion;
+         if replay_kind.is_some()
+             || matches!(
+diff --git a/codex-rs/tui/src/chatwidget/rendering.rs b/codex-rs/tui/src/chatwidget/rendering.rs
+index 15bbdad9d..e60e9ec35 100644
+--- a/codex-rs/tui/src/chatwidget/rendering.rs
++++ b/codex-rs/tui/src/chatwidget/rendering.rs
+@@ -257,7 +257,32 @@ impl ChatWidget {
+             options.textarea_right_reserve = right_reserve;
+             options.separate_status_line = options.command_popup_placement
+                 != crate::bottom_pane::CommandPopupPlacement::AboveComposer;
++            // Owned transcripts cap the whole bottom region; the panel shares that budget.
++            let bottom_region_cap = options.max_height;
+             let bottom_pane = self.bottom_pane.backdrop_with_options(options);
++            let bottom_pane = if let Some(panel) = &self.custom_statusline
++                && !self.bottom_pane.has_active_view()
++            {
++                let mut column = FlexRenderable::new();
++                column.push(/*flex*/ 0, bottom_pane);
++                column.push(
++                    /*flex*/ 1,
++                    RenderableItem::Owned(Box::new(MaxRows {
++                        child: RenderableItem::Borrowed(panel).inset(Insets::tlbr(0, 2, 0, 2)),
++                        rows: self.custom_statusline_max_rows(),
++                    })),
++                );
++                let column = RenderableItem::Owned(Box::new(column));
++                match bottom_region_cap {
++                    Some(rows) => RenderableItem::Owned(Box::new(MaxRows {
++                        child: column,
++                        rows,
++                    })),
++                    None => column,
++                }
++            } else {
++                bottom_pane
++            };
+             if !self.quick_dial_menu {
+                 return bottom_pane;
+             }
+@@ -318,6 +343,57 @@ impl ChatWidget {
+     pub(crate) fn note_rendered_width(&self, width: u16) {
+         self.last_rendered_width.set(Some(width));
+     }
++
++    pub(crate) fn note_screen_height(&self, height: u16) {
++        self.last_screen_height.set(Some(height));
++    }
++
++    /// The external panel may use at most a third of the screen so the composer and the
++    /// live transcript always keep their rows.
++    fn custom_statusline_max_rows(&self) -> u16 {
++        const UNKNOWN_SCREEN_ROWS: u16 = 8;
++        self.last_screen_height
++            .get()
++            .map_or(UNKNOWN_SCREEN_ROWS, |height| (height / 3).max(3))
++    }
++}
++
++/// Clamps a child to a fixed number of rows for both layout and painting.
++struct MaxRows<'a> {
++    child: RenderableItem<'a>,
++    rows: u16,
++}
++
++impl MaxRows<'_> {
++    fn clamp(&self, area: Rect) -> Rect {
++        Rect {
++            height: area.height.min(self.rows),
++            ..area
++        }
++    }
++}
++
++impl Renderable for MaxRows<'_> {
++    fn render(&self, area: Rect, buf: &mut Buffer) {
++        self.child.render(self.clamp(area), buf);
++    }
++
++    fn desired_height(&self, width: u16) -> u16 {
++        self.child.desired_height(width).min(self.rows)
++    }
++
++    fn render_scrolled(&self, area: Rect, buf: &mut Buffer, scroll_offset: u16) -> bool {
++        self.child
++            .render_scrolled(self.clamp(area), buf, scroll_offset)
++    }
++
++    fn cursor_pos(&self, area: Rect) -> Option<(u16, u16)> {
++        self.child.cursor_pos(self.clamp(area))
++    }
++
++    fn cursor_style(&self, area: Rect) -> crossterm::cursor::SetCursorStyle {
++        self.child.cursor_style(self.clamp(area))
++    }
+ }
+ 
+ struct TranscriptAreaRenderable<'a> {
+diff --git a/codex-rs/tui/src/chatwidget/replay.rs b/codex-rs/tui/src/chatwidget/replay.rs
+index 6c8a7fb7f..9469a2065 100644
+--- a/codex-rs/tui/src/chatwidget/replay.rs
++++ b/codex-rs/tui/src/chatwidget/replay.rs
+@@ -247,6 +247,9 @@ impl ChatWidget {
+         turn_id: String,
+         replay_kind: ReplayKind,
+     ) {
++        if let (Some(panel), Some(thread_id)) = (&self.custom_statusline, self.thread_id) {
++            panel.observe_replayed_item(&item, &thread_id.to_string());
++        }
+         match item {
+             // Snapshots contain the completed item, without the live start that renders its diff.
+             ThreadItem::FileChange {
+diff --git a/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap b/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap
+new file mode 100644
+index 000000000..d4e5d5bf9
+--- /dev/null
++++ b/codex-rs/tui/src/chatwidget/snapshots/codex_tui__chatwidget__context_statusline__tests__embedded_panel_preserves_composer_and_disappears_before_input_when_short.snap
+@@ -0,0 +1,10 @@
++---
++source: tui/src/chatwidget/context_statusline_tests.rs
++expression: rendered
++---
++
++› draft stays here
++
++  GPT-5.6-Sol default · /tmp/project
++  CUSTOM CONTEXT 37%
++  CUSTOM QUOTA 22%
+diff --git a/codex-rs/tui/src/chatwidget/status_surfaces.rs b/codex-rs/tui/src/chatwidget/status_surfaces.rs
+index d7340e543..d0a124445 100644
+--- a/codex-rs/tui/src/chatwidget/status_surfaces.rs
++++ b/codex-rs/tui/src/chatwidget/status_surfaces.rs
+@@ -159,8 +159,14 @@ impl ChatWidget {
+         }
+     }
+ 
++    /// The external panel consumes the branch and thread usage even when no native surface
++    /// selects them.
++    fn wants_git_branch(&self, selections: &StatusSurfaceSelections) -> bool {
++        selections.uses_git_branch() || self.custom_statusline.is_some()
++    }
++
+     fn sync_status_surface_shared_state(&mut self, selections: &StatusSurfaceSelections) {
+-        if !selections.uses_git_branch() {
++        if !self.wants_git_branch(selections) {
+             self.status_line_branch = None;
+             self.status_line_branch_pending = false;
+             self.status_line_branch_lookup_complete = false;
+@@ -193,7 +199,7 @@ impl ChatWidget {
+             self.request_status_line_workspace_headline_if_due(Instant::now());
+         }
+ 
+-        if selections.uses_thread_usage() {
++        if selections.uses_thread_usage() || self.custom_statusline.is_some() {
+             self.ensure_thread_usage_requested();
+         } else {
+             self.cancel_thread_usage_polling();
+@@ -308,6 +314,8 @@ impl ChatWidget {
+         self.sync_status_surface_shared_state(&selections);
+         self.refresh_status_line_from_selections(&selections);
+         self.refresh_terminal_title_from_selections(&selections);
++        // After the shared snapshot is synchronized so the panel sees the same branch.
++        self.refresh_custom_statusline();
+     }
+ 
+     /// Recomputes and emits the terminal title from config and runtime state.
+@@ -448,7 +456,7 @@ impl ChatWidget {
+ 
+     pub(super) fn request_status_line_branch_refresh(&mut self) {
+         let selections = self.status_surface_selections();
+-        if !selections.uses_git_branch() {
++        if !self.wants_git_branch(&selections) {
+             return;
+         }
+         let cwd = self.status_line_cwd().to_path_buf();
+diff --git a/codex-rs/tui/src/chatwidget/thread_usage.rs b/codex-rs/tui/src/chatwidget/thread_usage.rs
+index 9907aa1c6..6515cdb06 100644
+--- a/codex-rs/tui/src/chatwidget/thread_usage.rs
++++ b/codex-rs/tui/src/chatwidget/thread_usage.rs
+@@ -37,7 +37,7 @@ struct SelectedThreadUsage {
+ #[derive(Debug, Default)]
+ pub(super) struct ThreadUsageState {
+     thread_id: Option<ThreadId>,
+-    estimate: Option<ThreadUsage>,
++    pub(super) estimate: Option<ThreadUsage>,
+     pending_request_id: Option<u64>,
+     next_request_id: u64,
+     requested: bool,
+diff --git a/codex-rs/tui/src/context_statusline.rs b/codex-rs/tui/src/context_statusline.rs
+new file mode 100644
+index 000000000..f0a4f8a5d
+--- /dev/null
++++ b/codex-rs/tui/src/context_statusline.rs
+@@ -0,0 +1,594 @@
++//! Opt-in external status panel. Model behavior, persistence and native config stay unchanged.
++use crate::render::renderable::Renderable;
++use crate::tui::FrameRequester;
++use codex_app_server_protocol::ServerNotification;
++use codex_app_server_protocol::ThreadItem;
++use ratatui::buffer::Buffer;
++use ratatui::layout::Rect;
++use ratatui::text::Line;
++use ratatui::widgets::Paragraph;
++use serde_json::Value;
++use serde_json::json;
++use std::collections::BTreeMap;
++use std::collections::BTreeSet;
++use std::process::Stdio;
++use std::sync::Arc;
++use std::sync::Mutex;
++use std::sync::OnceLock;
++use std::time::Duration;
++use std::time::Instant;
++use tokio::io::AsyncReadExt;
++use tokio::io::AsyncWriteExt;
++use unicode_width::UnicodeWidthStr;
++
++mod process;
++
++pub(crate) const BACKEND_SOCKET: &str = "CODEX_STATUSLINE_BACKEND_SOCKET";
++const COMMAND_ENV: &str = "CODEX_STATUSLINE_COMMAND";
++
++/// Renderer command resolved once per process from the launcher environment.
++/// Widgets never read the environment themselves, so test processes stay panel-free.
++static COMMAND: OnceLock<Vec<String>> = OnceLock::new();
++
++/// Resolve `CODEX_STATUSLINE_COMMAND` once at startup. A malformed value is a launch
++/// error, matching how a bad `CODEX_STATUSLINE_BACKEND_SOCKET` is treated.
++pub(crate) fn configure_from_env() -> std::io::Result<()> {
++    let Ok(raw) = std::env::var(COMMAND_ENV) else {
++        return Ok(());
++    };
++    let command = parse_command(&raw)
++        .map_err(|reason| std::io::Error::other(format!("invalid {COMMAND_ENV}: {reason}")))?;
++    let _ = COMMAND.set(command);
++    Ok(())
++}
++
++fn parse_command(raw: &str) -> Result<Vec<String>, String> {
++    let command: Vec<String> =
++        serde_json::from_str(raw).map_err(|_| "expected a JSON array of strings".to_owned())?;
++    if command.is_empty() {
++        return Err("command must name a program".to_owned());
++    }
++    if command.len() > 16 {
++        return Err("command accepts at most 16 arguments".to_owned());
++    }
++    if command
++        .iter()
++        .any(|arg| arg.len() > 4096 || arg.contains('\0'))
++    {
++        return Err("arguments must be under 4096 bytes and NUL-free".to_owned());
++    }
++    Ok(command)
++}
++
++pub(crate) fn local_backend_from_env() -> std::io::Result<Option<crate::AppServerTarget>> {
++    let Some(path) = std::env::var_os(BACKEND_SOCKET) else {
++        return Ok(None);
++    };
++    #[cfg(unix)]
++    return local_backend_at(std::path::Path::new(&path)).map(Some);
++    #[cfg(not(unix))]
++    {
++        let _ = path;
++        Err(std::io::Error::other(
++            "private statusline backend requires a Unix socket",
++        ))
++    }
++}
++
++#[cfg(unix)]
++fn local_backend_at(path: &std::path::Path) -> std::io::Result<crate::AppServerTarget> {
++    use std::os::unix::fs::FileTypeExt;
++    use std::os::unix::fs::MetadataExt;
++    let parent = path
++        .parent()
++        .ok_or_else(|| std::io::Error::other("missing socket directory"))?;
++    let directory = std::fs::symlink_metadata(parent)?;
++    let advertised = std::fs::symlink_metadata(path)?;
++    let uid = unsafe { libc::geteuid() };
++    if !path.is_absolute()
++        || !directory.is_dir()
++        || directory.uid() != uid
++        || directory.mode() & 0o077 != 0
++        || advertised.uid() != uid
++    {
++        return Err(std::io::Error::other(
++            "statusline backend socket must be owned and private",
++        ));
++    }
++    // Official Codex advertises an alias to a deterministic endpoint in its
++    // protected executor-local directory. Reuse upstream's validation so an
++    // arbitrary symlink cannot redirect this local, credential-bearing client.
++    let endpoint = if advertised.file_type().is_symlink() {
++        codex_app_server_client::verified_local_daemon_socket(path)?
++            .ok_or_else(|| std::io::Error::other("unverified statusline backend alias"))?
++    } else {
++        codex_utils_absolute_path::AbsolutePathBuf::from_absolute_path(path)?
++    };
++    let socket = std::fs::symlink_metadata(endpoint.as_path())?;
++    if !socket.file_type().is_socket() || socket.uid() != uid {
++        return Err(std::io::Error::other("invalid statusline backend socket"));
++    }
++    Ok(crate::AppServerTarget::LocalDaemon {
++        endpoint: codex_app_server_client::RemoteAppServerEndpoint::UnixSocket {
++            socket_path: endpoint,
++        },
++        // Never read credentials in the patched embedded process after a backend failure.
++        allow_embedded_fallback: false,
++    })
++}
++
++const INTERVAL: Duration = Duration::from_millis(500);
++/// Longer than the refresh interval so a slow run only delays the next refresh; runs never
++/// overlap because `pending` serializes them.
++const TIMEOUT: Duration = Duration::from_secs(2);
++const MAX_OUTPUT: u64 = 65536;
++/// Hard transport limit on parsed rows. The screen-relative cap is applied at render time.
++const MAX_ROWS: usize = 64;
++const TAB_STOP: usize = 8;
++
++#[derive(Default)]
++struct Inner {
++    payload: Value,
++    session: Option<String>,
++    plan: Vec<Value>,
++    tools: BTreeMap<String, Value>,
++    agents: BTreeMap<String, Value>,
++    limits: Vec<Value>,
++    used_mcps: BTreeSet<String>,
++    lines: Vec<Line<'static>>,
++    width: u16,
++    generation: u64,
++    pending: bool,
++    last_started: Option<Instant>,
++    partial: bool,
++}
++
++pub(crate) struct Panel {
++    command: Vec<String>,
++    inner: Arc<Mutex<Inner>>,
++    frame: FrameRequester,
++    attached: Instant,
++}
++
++impl Inner {
++    /// Thread-scoped state belongs to one session. A payload update and an observed notification
++    /// can learn of a switch in either order, so whichever comes first resets the state.
++    fn enter_session(&mut self, session: Option<&str>) {
++        let Some(session) = session else {
++            return;
++        };
++        if self.session.as_deref() == Some(session) {
++            return;
++        }
++        self.session = Some(session.to_owned());
++        self.plan.clear();
++        self.tools.clear();
++        self.agents.clear();
++        self.lines.clear();
++        self.used_mcps.clear();
++        self.partial = false;
++        self.generation += 1;
++    }
++}
++
++impl Panel {
++    /// The panel for this process, if `configure_from_env` resolved a renderer command.
++    pub(crate) fn configured(frame: FrameRequester) -> Option<Self> {
++        COMMAND
++            .get()
++            .map(|command| Self::new(command.clone(), frame))
++    }
++
++    pub(crate) fn new(command: Vec<String>, frame: FrameRequester) -> Self {
++        Self {
++            command,
++            inner: Arc::default(),
++            frame,
++            attached: Instant::now(),
++        }
++    }
++
++    #[cfg(test)]
++    pub(crate) fn used_mcps_for_test(&self) -> Vec<String> {
++        self.inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner)
++            .used_mcps
++            .iter()
++            .cloned()
++            .collect()
++    }
++
++    #[cfg(test)]
++    pub(crate) fn plan_for_test(&self) -> Vec<Value> {
++        self.inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner)
++            .plan
++            .clone()
++    }
++
++    #[cfg(test)]
++    pub(crate) fn payload_for_test(&self) -> Value {
++        self.inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner)
++            .payload
++            .clone()
++    }
++
++    #[cfg(test)]
++    pub(crate) fn set_lines_for_test(&self, lines: Vec<Line<'static>>, width: u16) {
++        let mut inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        inner.lines = lines;
++        inner.width = width;
++    }
++
++    pub(crate) fn update(&self, mut payload: Value) {
++        for key in ["session_id", "model", "cwd", "branch"] {
++            if let Some(value) = payload[key].as_str() {
++                payload[key] = json!(label(value));
++            }
++        }
++        if let Some(roles) = payload["agent_roles"].as_object() {
++            payload["agent_roles"] = json!(
++                roles
++                    .iter()
++                    .take(64)
++                    .map(|(id, role)| (label(id), label(role.as_str().unwrap_or("agent"))))
++                    .collect::<BTreeMap<_, _>>()
++            );
++        }
++        let mut inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        inner.enter_session(payload["session_id"].as_str());
++        payload["attached_ms"] = json!(self.attached.elapsed().as_millis() as u64);
++        inner.payload = payload;
++    }
++
++    pub(crate) fn observe(&self, notification: &ServerNotification, active: Option<String>) {
++        let mut inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        inner.enter_session(active.as_deref());
++        match notification {
++            ServerNotification::TurnPlanUpdated(n) if Some(&n.thread_id) == active.as_ref() => {
++                inner.partial |= n.plan.len() > 256;
++                inner.plan = n
++                    .plan
++                    .iter()
++                    .take(256)
++                    .map(|step| json!({"step":label(&step.step),"status":step.status}))
++                    .collect();
++            }
++            ServerNotification::ItemStarted(n)
++                if Some(&n.thread_id) == active.as_ref()
++                    || inner.agents.contains_key(&n.thread_id) =>
++            {
++                observe_item(
++                    &mut inner,
++                    &n.item,
++                    false,
++                    &n.thread_id,
++                    n.started_at_ms as f64 / 1000.0,
++                );
++            }
++            ServerNotification::ItemCompleted(n)
++                if Some(&n.thread_id) == active.as_ref()
++                    || inner.agents.contains_key(&n.thread_id) =>
++            {
++                observe_item(&mut inner, &n.item, true, &n.thread_id, 0.0);
++            }
++            ServerNotification::TurnCompleted(n)
++                if Some(&n.thread_id) == active.as_ref()
++                    || inner.agents.contains_key(&n.thread_id) =>
++            {
++                inner
++                    .tools
++                    .retain(|_, tool| tool["agent_id"] != n.thread_id);
++            }
++            ServerNotification::AccountRateLimitsUpdated(n)
++                if n.rate_limits
++                    .limit_id
++                    .as_deref()
++                    .is_none_or(|id| id == "codex") =>
++            {
++                inner.limits = [&n.rate_limits.primary, &n.rate_limits.secondary].into_iter().flatten().map(|w| json!({
++                    "used_percent":w.used_percent,"window_minutes":w.window_duration_mins,"resets_at":w.resets_at
++                })).collect();
++            }
++            _ => {}
++        }
++    }
++
++    /// Replayed history bypasses notification dispatch; items arrive already complete, so this
++    /// rebuilds the used-MCP and known-agent sets without listing running tools.
++    pub(crate) fn observe_replayed_item(&self, item: &ThreadItem, thread: &str) {
++        let mut inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        inner.enter_session(Some(thread));
++        observe_item(&mut inner, item, true, thread, 0.0);
++    }
++
++    fn refresh(&self, width: u16) {
++        self.frame.schedule_frame_in(INTERVAL);
++        let mut inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        if inner.pending
++            || inner.last_started.is_some_and(|at| at.elapsed() < INTERVAL)
++            || self.command.is_empty()
++        {
++            return;
++        }
++        let mut payload = inner.payload.clone();
++        payload["columns"] = json!(width);
++        payload["attached_ms"] = json!(self.attached.elapsed().as_millis() as u64);
++        payload["plan"] = json!(inner.plan);
++        payload["tools"] = json!(
++            inner
++                .tools
++                .values()
++                .filter(|tool| tool["agent_id"] == payload["session_id"])
++                .collect::<Vec<_>>()
++        );
++        payload["agents"] = json!(
++            inner
++                .agents
++                .values()
++                .map(|agent| {
++                    let mut agent = agent.clone();
++                    agent["tools"] = json!(
++                        inner
++                            .tools
++                            .values()
++                            .filter(|tool| tool["agent_id"] == agent["id"])
++                            .collect::<Vec<_>>()
++                    );
++                    if let Some(role) =
++                        payload["agent_roles"].get(agent["id"].as_str().unwrap_or_default())
++                    {
++                        agent["role"] = role.clone();
++                    }
++                    agent
++                })
++                .collect::<Vec<_>>()
++        );
++        if let Some(object) = payload.as_object_mut() {
++            object.remove("agent_roles");
++        }
++        payload["used"] = json!({"mcps":inner.used_mcps});
++        payload["limits"] = json!(inner.limits);
++        payload["partial"] = json!(inner.partial);
++        let generation = inner.generation;
++        inner.pending = true;
++        inner.last_started = Some(Instant::now());
++        let state = Arc::downgrade(&self.inner);
++        let command = self.command.clone();
++        let frame = self.frame.clone();
++        tokio::spawn(async move {
++            let result = run_renderer(&command, payload).await;
++            if let Some(state) = state.upgrade() {
++                let mut state = state
++                    .lock()
++                    .unwrap_or_else(std::sync::PoisonError::into_inner);
++                state.pending = false;
++                // A failed or slow run keeps the last good output so the layout does not jump.
++                if state.generation == generation
++                    && let Ok(lines) = result
++                {
++                    state.lines = lines;
++                    state.width = width;
++                }
++                frame.schedule_frame();
++            }
++        });
++    }
++}
++
++pub(crate) fn label(value: &str) -> String {
++    value
++        .chars()
++        .filter(|c| !c.is_control() && !matches!(*c, '\u{061c}' | '\u{200e}' | '\u{200f}' | '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}'))
++        .take(512)
++        .collect()
++}
++
++fn observe_item(inner: &mut Inner, item: &ThreadItem, completed: bool, thread: &str, at: f64) {
++    let (id, tool) = match item {
++        ThreadItem::CommandExecution { id, .. } => (id, "Shell".to_owned()),
++        ThreadItem::FileChange { id, .. } => (id, "Edit".to_owned()),
++        ThreadItem::McpToolCall {
++            id,
++            server,
++            tool,
++            status,
++            ..
++        } => {
++            if completed
++                && *status == codex_app_server_protocol::McpToolCallStatus::Completed
++                && inner.used_mcps.len() < 32
++            {
++                inner.used_mcps.insert(label(server));
++            }
++            (id, format!("MCP {} {}", label(server), label(tool)))
++        }
++        ThreadItem::DynamicToolCall { id, tool, .. } => (id, label(tool)),
++        ThreadItem::CollabAgentToolCall {
++            id,
++            tool,
++            agents_states,
++            ..
++        } => {
++            for (agent_id, state) in agents_states.iter().take(64) {
++                if inner.agents.len() < 64 || inner.agents.contains_key(agent_id) {
++                    inner.agents.insert(
++                        label(agent_id),
++                        json!({"id":label(agent_id),"role":"agent","status":state.status}),
++                    );
++                } else {
++                    inner.partial = true;
++                }
++            }
++            (id, json!(tool).as_str().unwrap_or("agent").to_owned())
++        }
++        _ => return,
++    };
++    let key = format!("{thread}:{}", label(id));
++    if completed {
++        inner.tools.remove(&key);
++    } else if inner.tools.len() < 64 {
++        inner.tools.entry(key).or_insert_with(
++            || json!({"id":label(id),"tool":tool,"at":at,"agent_id":label(thread)}),
++        );
++    } else {
++        inner.partial = true;
++    }
++}
++
++impl Renderable for Panel {
++    fn render(&self, area: Rect, buf: &mut Buffer) {
++        let inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        // Lines rendered for another width stay visible, truncated, until the refresh at this
++        // width lands; a resize must not blank the panel.
++        Renderable::render(&Paragraph::new(inner.lines.clone()), area, buf);
++    }
++    fn desired_height(&self, width: u16) -> u16 {
++        self.refresh(width);
++        let inner = self
++            .inner
++            .lock()
++            .unwrap_or_else(std::sync::PoisonError::into_inner);
++        inner.lines.len() as u16
++    }
++}
++
++async fn run_renderer(command: &[String], payload: Value) -> Result<Vec<Line<'static>>, ()> {
++    let raw = serde_json::to_vec(&payload).map_err(|_| ())?;
++    if raw.len() > 1_048_576 {
++        return Err(());
++    }
++    let work = async {
++        let mut command_builder = tokio::process::Command::new(command.first().ok_or(())?);
++        command_builder
++            .args(&command[1..])
++            .stdin(Stdio::piped())
++            .stdout(Stdio::piped())
++            .stderr(Stdio::null());
++        let (mut child, _tree) = process::spawn(&mut command_builder).map_err(|_| ())?;
++        let mut stdin = child.stdin.take().ok_or(())?;
++        let mut stdout = child.stdout.take().ok_or(())?.take(MAX_OUTPUT + 1);
++        let writer = async {
++            // A renderer may exit without reading its stdin; its stdout and exit status
++            // still decide the outcome.
++            match stdin.write_all(&raw).await {
++                Ok(()) => {}
++                Err(error) if error.kind() == std::io::ErrorKind::BrokenPipe => {}
++                Err(_) => return Err(()),
++            }
++            drop(stdin);
++            Ok::<_, ()>(())
++        };
++        let reader = async {
++            let mut output = Vec::new();
++            stdout.read_to_end(&mut output).await.map_err(|_| ())?;
++            if output.len() as u64 > MAX_OUTPUT {
++                return Err(());
++            }
++            Ok(output)
++        };
++        let (_, output) = tokio::try_join!(writer, reader)?;
++        if !child.wait().await.map_err(|_| ())?.success() {
++            return Err(());
++        }
++        parse_output(&output)
++    };
++    tokio::time::timeout(TIMEOUT, work).await.map_err(|_| ())?
++}
++
++fn parse_output(output: &[u8]) -> Result<Vec<Line<'static>>, ()> {
++    let text = std::str::from_utf8(output).map_err(|_| ())?;
++    // Only SGR styling survives. OSC, cursor controls, clipboard/title writes and C0 are discarded.
++    let mut safe = String::new();
++    // Columns measured so far on the current row, plus the visible text since the last
++    // measurement point. Rendering splits spans at SGR sequences and sums their string widths
++    // (so a ZWJ emoji is one cluster inside a span but not across one), and this measurement
++    // flushes at the same boundaries. Flushing at tabs too keeps the cost linear.
++    let mut column = 0usize;
++    let mut segment = String::new();
++    let mut chars = text.chars().peekable();
++    while let Some(c) = chars.next() {
++        if c == '\t' {
++            column += std::mem::take(&mut segment).width();
++            let spaces = TAB_STOP - column % TAB_STOP;
++            safe.extend(std::iter::repeat_n(' ', spaces));
++            column += spaces;
++        } else if c == '\n' {
++            safe.push(c);
++            column = 0;
++            segment.clear();
++        } else if c == '\x1b' {
++            match chars.next() {
++                Some('[') => {
++                    let mut sequence = String::new();
++                    for next in chars.by_ref() {
++                        if ('@'..='~').contains(&next) {
++                            if next == 'm'
++                                && sequence.len() <= 128
++                                && sequence
++                                    .chars()
++                                    .all(|c| c.is_ascii_digit() || c == ';' || c == ':')
++                            {
++                                safe.push_str(&format!("\x1b[{sequence}m"));
++                                column += std::mem::take(&mut segment).width();
++                            }
++                            break;
++                        }
++                        if sequence.len() <= 128 {
++                            sequence.push(next);
++                        }
++                    }
++                }
++                Some(']' | 'P' | '_' | '^') => {
++                    let mut escaped = false;
++                    for next in chars.by_ref() {
++                        if next == '\x07' || (escaped && next == '\\') {
++                            break;
++                        }
++                        escaped = next == '\x1b';
++                    }
++                }
++                _ => {}
++            }
++        } else if !c.is_control() && !matches!(c, '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}')
++        {
++            safe.push(c);
++            segment.push(c);
++        }
++    }
++    let mut lines = codex_ansi_escape::ansi_escape(&safe).lines;
++    if lines.last().is_some_and(|line| line.width() == 0) {
++        lines.pop();
++    }
++    if lines.len() > MAX_ROWS {
++        lines.truncate(MAX_ROWS - 1);
++        lines.push(format!(" ! Statusline clipped at {MAX_ROWS} rows").into());
++    }
++    Ok(lines)
++}
++
++#[cfg(test)]
++#[path = "context_statusline_tests.rs"]
++mod tests;
+diff --git a/codex-rs/tui/src/context_statusline/process.rs b/codex-rs/tui/src/context_statusline/process.rs
+new file mode 100644
+index 000000000..e85f3b5d9
+--- /dev/null
++++ b/codex-rs/tui/src/context_statusline/process.rs
+@@ -0,0 +1,37 @@
++//! Own the renderer tree on every exit, including cancellation and successful rendering.
++use std::io;
++use tokio::process::Child;
++use tokio::process::Command;
++
++pub(super) struct Tree {
++    #[cfg(unix)]
++    pid: u32,
++    #[cfg(windows)]
++    _job: codex_utils_pty::JobObject,
++}
++
++#[cfg(unix)]
++impl Drop for Tree {
++    fn drop(&mut self) {
++        let _ = codex_utils_pty::process_group::kill_process_group(self.pid);
++    }
++}
++
++pub(super) fn spawn(command: &mut Command) -> io::Result<(Child, Tree)> {
++    command.kill_on_drop(true);
++    #[cfg(unix)]
++    {
++        let child = command.process_group(0).spawn()?;
++        let pid = child
++            .id()
++            .ok_or_else(|| io::Error::other("missing renderer PID"))?;
++        Ok((child, Tree { pid }))
++    }
++    #[cfg(windows)]
++    {
++        // Fail closed: assignment happens while suspended, before any descendants can spawn.
++        let job = codex_utils_pty::JobObject::create_without_breakaway()?;
++        let child = job.spawn_contained(command)?;
++        Ok((child, Tree { _job: job }))
++    }
++}
+diff --git a/codex-rs/tui/src/context_statusline_tests.rs b/codex-rs/tui/src/context_statusline_tests.rs
+new file mode 100644
+index 000000000..55d691e17
+--- /dev/null
++++ b/codex-rs/tui/src/context_statusline_tests.rs
+@@ -0,0 +1,448 @@
++use super::*;
++use pretty_assertions::assert_eq;
++use ratatui::buffer::Buffer;
++use ratatui::layout::Rect;
++use tempfile::tempdir;
++
++#[tokio::test]
++async fn renderer_handles_argv_spaces_and_delivers_json_on_stdin() {
++    let dir = tempdir().unwrap();
++    let script = dir.path().join("renderer with spaces.py");
++    std::fs::write(&script, "import json,sys\nx=json.load(sys.stdin)\nprint('\\x1b[1mCTX ' + str(x['columns']) + '\\x1b[0m')\n").unwrap();
++    let result = run_renderer(
++        &[
++            if cfg!(windows) {
++                "python".into()
++            } else {
++                "python3".into()
++            },
++            script.to_string_lossy().into(),
++        ],
++        json!({"columns":80}),
++    )
++    .await
++    .unwrap();
++    assert_eq!(result[0].to_string(), "CTX 80");
++    assert!(
++        result[0].spans[0]
++            .style
++            .add_modifier
++            .contains(ratatui::style::Modifier::BOLD)
++    );
++}
++
++#[tokio::test]
++async fn renderer_failure_timeout_and_output_limit_are_bounded() {
++    for code in [
++        "raise SystemExit(2)",
++        "import time;time.sleep(10)",
++        "print('x'*70000)",
++    ] {
++        let started = Instant::now();
++        assert!(
++            run_renderer(
++                &[
++                    if cfg!(windows) {
++                        "python".into()
++                    } else {
++                        "python3".into()
++                    },
++                    "-c".into(),
++                    code.into()
++                ],
++                json!({})
++            )
++            .await
++            .is_err()
++        );
++        assert!(started.elapsed() < Duration::from_secs(3));
++    }
++}
++
++#[test]
++fn unsafe_terminal_sequences_are_removed_and_rows_are_capped() {
++    let rows = parse_output(b"\x1b]52;c;SECRET\x07safe\x1b[2J\r\x1b[1mbold\x1b[0m\n").unwrap();
++    assert_eq!(rows[0].to_string(), "safebold");
++    let rows = parse_output("line\n".repeat(100).as_bytes()).unwrap();
++    assert_eq!(rows.len(), 64);
++    assert!(rows[63].to_string().contains("clipped"));
++}
++
++#[test]
++fn panel_snapshot_is_styled_and_clips_without_touching_composer_rows() {
++    let lines = parse_output("CONTEXT USED     5H QUOTA USED\n\x1b[38;2;74;222;128m████░░\x1b[0m          █░░░░░\n37%              22%\n".as_bytes()).unwrap();
++    let mut buf = Buffer::empty(Rect::new(0, 0, 44, 5));
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    panel.inner.lock().unwrap().lines = lines;
++    panel.inner.lock().unwrap().width = 44;
++    panel.render(Rect::new(0, 0, 44, 3), &mut buf);
++    insta::assert_snapshot!(
++        buf.content
++            .iter()
++            .map(ratatui::buffer::Cell::symbol)
++            .collect::<String>()
++    );
++    assert_eq!(buf[(0, 3)].symbol(), " ");
++}
++
++fn tool_event(thread: &str) -> ServerNotification {
++    serde_json::from_value(json!({"method":"item/started","params":{
++    "threadId":thread,"turnId":"turn","startedAtMs":0,"item":{
++        "type":"dynamicToolCall","id":"call","namespace":null,"tool":"Read",
++        "arguments":{"command":"SECRET_COMMAND","prompt":"SECRET_PROMPT"},
++        "status":"inProgress","contentItems":null,"success":null,"durationMs":null
++    }}}))
++    .unwrap()
++}
++
++#[test]
++fn metadata_is_allowlisted_and_child_tool_ids_cannot_replace_main_calls() {
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    panel.update(json!({"session_id":"main"}));
++    panel
++        .inner
++        .lock()
++        .unwrap()
++        .agents
++        .insert("child".into(), json!({"id":"child","status":"running"}));
++    panel.observe(&tool_event("main"), Some("main".into()));
++    panel.observe(&tool_event("child"), Some("main".into()));
++    panel.observe(&tool_event("unrelated"), Some("main".into()));
++    let inner = panel.inner.lock().unwrap();
++    assert_eq!(inner.tools.len(), 2);
++    assert!(inner.tools.contains_key("main:call"));
++    assert!(inner.tools.contains_key("child:call"));
++    assert!(
++        !serde_json::to_string(&inner.tools)
++            .unwrap()
++            .contains("SECRET")
++    );
++}
++
++#[test]
++fn switching_threads_discards_cached_metadata_and_output() {
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    panel.update(json!({"session_id":"main"}));
++    panel.observe(&tool_event("main"), Some("main".into()));
++    panel.inner.lock().unwrap().lines = vec!["OLD_THREAD".into()];
++    panel.update(json!({"session_id":"other"}));
++    let inner = panel.inner.lock().unwrap();
++    assert!(inner.tools.is_empty());
++    assert!(inner.lines.is_empty());
++}
++
++#[test]
++fn state_observed_before_the_first_payload_of_a_session_survives_it() {
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    panel.observe(&tool_event("main"), Some("main".into()));
++    panel.update(json!({"session_id":"main"}));
++    assert_eq!(panel.inner.lock().unwrap().tools.len(), 1);
++    // A different session observed first still resets the state.
++    panel.observe(&tool_event("other"), Some("other".into()));
++    panel.update(json!({"session_id":"other"}));
++    assert_eq!(panel.inner.lock().unwrap().tools.len(), 1);
++    assert_eq!(
++        panel.inner.lock().unwrap().tools.values().next().unwrap()["agent_id"],
++        "other"
++    );
++}
++
++#[tokio::test]
++async fn renderer_cleans_up_descendants_after_timeout_and_success() {
++    for finish in ["import time;time.sleep(10)", "pass"] {
++        let dir = tempdir().unwrap();
++        let ticks = dir.path().join("ticks");
++        let pidfile = dir.path().join("pid");
++        let descendant = format!(
++            "import time\nf=open({:?},'a',buffering=1)\nfor _ in range(250):\n f.write('x');f.flush();time.sleep(0.02)\n",
++            ticks.to_string_lossy()
++        );
++        let code = format!(
++            "import subprocess,sys,time,pathlib\np=subprocess.Popen([sys.executable,'-c', {descendant:?}],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)\npathlib.Path({:?}).write_text(str(p.pid))\nwhile not pathlib.Path({:?}).exists(): time.sleep(0.005)\n{finish}",
++            pidfile.to_string_lossy(),
++            ticks.to_string_lossy()
++        );
++        let command = vec![
++            if cfg!(windows) {
++                "python".into()
++            } else {
++                "python3".into()
++            },
++            "-c".into(),
++            code,
++        ];
++        let _ = run_renderer(&command, json!({})).await;
++        tokio::time::sleep(Duration::from_millis(100)).await;
++        let before = std::fs::metadata(&ticks).unwrap().len();
++        tokio::time::sleep(Duration::from_millis(200)).await;
++        let after = std::fs::metadata(&ticks).unwrap().len();
++        let pid = std::fs::read_to_string(pidfile).unwrap();
++        let _ = std::process::Command::new(&command[0])
++            .args([
++                "-c",
++                &format!("import os,signal;os.kill({pid},signal.SIGTERM)"),
++            ])
++            .stderr(Stdio::null())
++            .status();
++        assert_eq!(
++            before, after,
++            "renderer descendant remained active: {finish}"
++        );
++    }
++}
++
++#[tokio::test]
++async fn renderer_stdin_is_bounded_and_internal_roles_are_not_forwarded() {
++    let dir = tempdir().unwrap();
++    let capture = dir.path().join("capture.json");
++    let code = format!(
++        "import pathlib,sys;pathlib.Path({:?}).write_bytes(sys.stdin.buffer.read());print('ok')",
++        capture.to_string_lossy()
++    );
++    let panel = Panel::new(
++        vec![
++            if cfg!(windows) {
++                "python".into()
++            } else {
++                "python3".into()
++            },
++            "-c".into(),
++            code,
++        ],
++        FrameRequester::test_dummy(),
++    );
++    let oversized = "x\n\u{202e}".repeat(100_000);
++    panel.update(json!({"session_id":"main", "model":oversized, "cwd":oversized, "branch":oversized, "agent_roles":{"child":oversized}}));
++    panel
++        .inner
++        .lock()
++        .unwrap()
++        .agents
++        .insert("child".into(), json!({"id":"child", "status":"running"}));
++    panel.refresh(80);
++    for _ in 0..200 {
++        if capture.exists() {
++            break;
++        }
++        tokio::time::sleep(Duration::from_millis(10)).await;
++    }
++    let raw = std::fs::read(capture).unwrap();
++    assert!(
++        raw.len() < 16_384,
++        "metadata crossed subprocess boundary without bounds: {}",
++        raw.len()
++    );
++    let value: Value = serde_json::from_slice(&raw).unwrap();
++    assert!(value.get("agent_roles").is_none());
++    for text in [
++        &value["model"],
++        &value["cwd"],
++        &value["branch"],
++        &value["agents"][0]["role"],
++    ] {
++        let text = text.as_str().unwrap();
++        assert!(text.chars().count() <= 512);
++        assert!(!text.chars().any(|c| c.is_control() || c == '\u{202e}'));
++    }
++}
++
++#[cfg(unix)]
++#[test]
++fn private_backend_is_local_and_cannot_fall_back_to_embedded_credentials() {
++    use std::os::unix::fs::PermissionsExt;
++    let dir = tempdir().unwrap();
++    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
++    let path = dir.path().join("app-server.sock");
++    let _listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
++    let target = local_backend_at(&path).unwrap();
++    assert!(matches!(
++        target,
++        crate::AppServerTarget::LocalDaemon {
++            allow_embedded_fallback: false,
++            ..
++        }
++    ));
++    assert!(!target.uses_remote_workspace());
++    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o755)).unwrap();
++    assert!(local_backend_at(&path).is_err());
++}
++
++#[cfg(unix)]
++#[test]
++fn private_backend_refuses_missing_regular_or_symlinked_sockets() {
++    use std::os::unix::fs::PermissionsExt;
++    let dir = tempdir().unwrap();
++    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
++    let path = dir.path().join("app-server.sock");
++    assert!(local_backend_at(&path).is_err());
++    std::fs::write(&path, "not a socket").unwrap();
++    assert!(local_backend_at(&path).is_err());
++    std::fs::remove_file(&path).unwrap();
++    let real = dir.path().join("real.sock");
++    let _listener = std::os::unix::net::UnixListener::bind(&real).unwrap();
++    std::os::unix::fs::symlink(&real, &path).unwrap();
++    assert!(local_backend_at(&path).is_err());
++}
++
++#[cfg(unix)]
++#[test]
++fn private_backend_accepts_only_the_verified_upstream_socket_alias() {
++    use sha2::Digest;
++    use std::os::unix::ffi::OsStrExt;
++    use std::os::unix::fs::PermissionsExt;
++    let dir = tempdir().unwrap();
++    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
++    let path = dir.path().join("app-server.sock");
++    let canonical = std::fs::canonicalize(dir.path())
++        .unwrap()
++        .join("app-server.sock");
++    let hash = sha2::Sha256::digest(canonical.as_os_str().as_bytes());
++    let real = codex_uds::prepare_shared_daemon_socket_directory()
++        .unwrap()
++        .join(format!("{hash:x}"));
++    let listener = std::os::unix::net::UnixListener::bind(&real).unwrap();
++    std::os::unix::fs::symlink(&real, &path).unwrap();
++    let result = local_backend_at(&path);
++    drop(listener);
++    std::fs::remove_file(&real).unwrap();
++    let target = result.unwrap();
++    assert!(matches!(target, crate::AppServerTarget::LocalDaemon {
++        endpoint: codex_app_server_client::RemoteAppServerEndpoint::UnixSocket { socket_path },
++        allow_embedded_fallback: false,
++    } if socket_path.as_path() == real));
++    assert!(local_backend_at(&path).is_err());
++}
++
++fn python() -> String {
++    if cfg!(windows) {
++        "python".into()
++    } else {
++        "python3".into()
++    }
++}
++
++#[tokio::test]
++async fn renderer_failure_keeps_the_last_good_output() {
++    let panel = Panel::new(
++        vec![python(), "-c".into(), "raise SystemExit(2)".into()],
++        FrameRequester::test_dummy(),
++    );
++    {
++        let mut inner = panel.inner.lock().unwrap();
++        inner.lines = vec!["LAST GOOD".into()];
++        inner.width = 80;
++    }
++    panel.refresh(80);
++    for _ in 0..300 {
++        if !panel.inner.lock().unwrap().pending {
++            break;
++        }
++        tokio::time::sleep(Duration::from_millis(10)).await;
++    }
++    {
++        let inner = panel.inner.lock().unwrap();
++        assert!(!inner.pending, "renderer run did not finish");
++        assert_eq!(inner.lines.len(), 1);
++        assert_eq!(inner.lines[0].to_string(), "LAST GOOD");
++    }
++    assert_eq!(panel.desired_height(80), 1);
++}
++
++#[tokio::test]
++async fn renderer_that_ignores_stdin_still_delivers_output() {
++    // Larger than any platform pipe buffer, so the writer sees EPIPE once the child exits.
++    let payload = json!({"pad": "x".repeat(300_000)});
++    let lines = run_renderer(&[python(), "-c".into(), "print('ok')".into()], payload)
++        .await
++        .unwrap();
++    assert_eq!(lines.len(), 1);
++    assert_eq!(lines[0].to_string(), "ok");
++}
++
++#[test]
++fn tabs_expand_to_tab_stops_instead_of_vanishing() {
++    let rows = parse_output(b"CTX 37%\tQUOTA 22%\n\tindented\nab\x1b[1m\tc\x1b[0m\n").unwrap();
++    assert_eq!(rows[0].to_string(), "CTX 37% QUOTA 22%");
++    assert_eq!(rows[1].to_string(), "        indented");
++    // SGR sequences occupy no columns, so the tab stop is measured on visible text only.
++    assert_eq!(rows[2].to_string(), "ab      c");
++    // Grapheme clusters count once: a ZWJ emoji and an emoji-presentation sequence are 2 cols.
++    let rows = parse_output("👩\u{200d}💻\tX\n✔\u{fe0f}\tY\n".as_bytes()).unwrap();
++    assert_eq!(rows[0].to_string(), "👩\u{200d}💻      X");
++    assert_eq!(rows[1].to_string(), "✔\u{fe0f}      Y");
++    // An SGR inside a cluster splits it into two spans at render time; the measurement agrees.
++    let rows = parse_output("👩\x1b[31m\u{200d}💻\tX\n".as_bytes()).unwrap();
++    assert_eq!(rows[0].to_string(), "👩\u{200d}💻    X");
++    assert_eq!(rows[0].width(), 9);
++}
++
++#[test]
++fn tab_expansion_is_linear_in_the_output_size() {
++    let started = std::time::Instant::now();
++    let rows = parse_output(&vec![b'\t'; 65_536]).unwrap();
++    assert_eq!(rows[0].width(), 65_536 * TAB_STOP);
++    assert!(
++        started.elapsed() < Duration::from_secs(2),
++        "{:?}",
++        started.elapsed()
++    );
++}
++
++#[test]
++fn renderer_command_is_validated_once_and_rejects_malformed_values() {
++    assert_eq!(
++        parse_command(r#"["python3","render.py"]"#).unwrap(),
++        vec!["python3".to_owned(), "render.py".to_owned()]
++    );
++    for raw in ["~/sl.sh", "[]", r#"["a\u0000b"]"#, "{\"cmd\":1}"] {
++        assert!(parse_command(raw).is_err(), "accepted {raw:?}");
++    }
++    let many = serde_json::to_string(&vec!["x"; 17]).unwrap();
++    assert!(parse_command(&many).is_err());
++    // Nothing configured this process, so widgets built in tests never spawn a renderer.
++    assert!(Panel::configured(FrameRequester::test_dummy()).is_none());
++}
++
++#[test]
++fn resizing_keeps_the_last_output_visible_until_the_next_refresh() {
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    panel.set_lines_for_test(vec!["CTX 37%  QUOTA 22%".into(), "second row".into()], 80);
++    assert_eq!(panel.desired_height(40), 2);
++    let mut buf = Buffer::empty(Rect::new(0, 0, 10, 2));
++    panel.render(Rect::new(0, 0, 10, 2), &mut buf);
++    assert_eq!(buf[(0, 0)].symbol(), "C");
++    assert_eq!(buf[(0, 1)].symbol(), "s");
++}
++
++fn collab_item(tool: &str) -> ThreadItem {
++    serde_json::from_value(json!({
++        "type":"collabAgentToolCall","id":"collab-1","tool":tool,"status":"completed",
++        "senderThreadId":"main","receiverThreadIds":["child"],"prompt":null,"model":null,
++        "reasoningEffort":null,"agentsStates":{"child":{"status":"running","message":null}}
++    }))
++    .unwrap()
++}
++
++#[test]
++fn replayed_history_rebuilds_used_mcps_and_known_agents() {
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    let mcp: ThreadItem = serde_json::from_value(json!({
++        "type":"mcpToolCall","id":"mcp-1","server":"github","tool":"search","status":"completed",
++        "arguments":{},"result":null,"error":null,"durationMs":null,"mcpApp":null,"contentItems":null
++    }))
++    .unwrap();
++    panel.observe_replayed_item(&mcp, "main");
++    panel.observe_replayed_item(&collab_item("spawnAgent"), "main");
++    assert_eq!(panel.used_mcps_for_test(), vec!["github".to_owned()]);
++    let inner = panel.inner.lock().unwrap();
++    assert!(inner.tools.is_empty(), "history never lists running tools");
++    assert_eq!(inner.agents.len(), 1);
++}
++
++#[test]
++fn collab_tool_names_use_the_protocol_spelling() {
++    let panel = Panel::new(vec![], FrameRequester::test_dummy());
++    let mut inner = panel.inner.lock().unwrap();
++    observe_item(&mut inner, &collab_item("spawnAgent"), false, "main", 1.0);
++    assert_eq!(inner.tools.values().next().unwrap()["tool"], "spawnAgent");
++}
+diff --git a/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__pnpm_update_available_history_cell_snapshot.snap b/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__pnpm_update_available_history_cell_snapshot.snap
+index a9dd9cac7..6b84bf88f 100644
+--- a/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__pnpm_update_available_history_cell_snapshot.snap
++++ b/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__pnpm_update_available_history_cell_snapshot.snap
+@@ -3,7 +3,7 @@ source: tui/src/history_cell/tests.rs
+ expression: rendered
+ ---
+ ╭─────────────────────────────────────────────────╮
+-│ ✨ Update available! 0.0.0 -> 9.9.9             │
++│ ✨ Update available! 0.164.0 -> 9.9.9           │
+ │ Run pnpm add -g @openai/codex to update.        │
+ │                                                 │
+ │ See full release notes:                         │
+diff --git a/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__session_info_availability_nux_tooltip_snapshot.snap b/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__session_info_availability_nux_tooltip_snapshot.snap
+index e5cc9a0ce..871320bbc 100644
+--- a/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__session_info_availability_nux_tooltip_snapshot.snap
++++ b/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__session_info_availability_nux_tooltip_snapshot.snap
+@@ -1,10 +1,10 @@
+ ---
+ source: tui/src/history_cell/tests.rs
+-assertion_line: 778
++assertion_line: 774
+ expression: rendered
+ ---
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+      /tmp/project
+ 
+   Tip: Model just became available
+diff --git a/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__standalone_unix_update_available_history_cell_snapshot.snap b/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__standalone_unix_update_available_history_cell_snapshot.snap
+index c8f352dbb..0db959b6e 100644
+--- a/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__standalone_unix_update_available_history_cell_snapshot.snap
++++ b/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__standalone_unix_update_available_history_cell_snapshot.snap
+@@ -3,7 +3,7 @@ source: tui/src/history_cell/tests.rs
+ expression: rendered
+ ---
+ ╭─────────────────────────────────────────────────────────────────────────────────────────────────────╮
+-│ ✨ Update available! 0.0.0 -> 9.9.9                                                                 │
++│ ✨ Update available! 0.164.0 -> 9.9.9                                                               │
+ │ Run sh -c 'curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh' to update. │
+ │                                                                                                     │
+ │ See full release notes:                                                                             │
+diff --git a/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__standalone_windows_update_available_history_cell_snapshot.snap b/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__standalone_windows_update_available_history_cell_snapshot.snap
+index fb15a0577..3e7f95439 100644
+--- a/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__standalone_windows_update_available_history_cell_snapshot.snap
++++ b/codex-rs/tui/src/history_cell/snapshots/codex_tui__history_cell__tests__standalone_windows_update_available_history_cell_snapshot.snap
+@@ -3,7 +3,7 @@ source: tui/src/history_cell/tests.rs
+ expression: rendered
+ ---
+ ╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+-│ ✨ Update available! 0.0.0 -> 9.9.9                                                                        │
++│ ✨ Update available! 0.164.0 -> 9.9.9                                                                      │
+ │ Run powershell -ExecutionPolicy Bypass -c '$env:CODEX_NON_INTERACTIVE=1; irm                               │
+ │ https://chatgpt.com/codex/install.ps1 | iex' to update.                                                    │
+ │                                                                                                            │
+diff --git a/codex-rs/tui/src/lib.rs b/codex-rs/tui/src/lib.rs
+index 147ff230b..eec607e9d 100644
+--- a/codex-rs/tui/src/lib.rs
++++ b/codex-rs/tui/src/lib.rs
+@@ -178,6 +178,7 @@ pub(crate) mod live_wrap;
+ mod local_settings;
+ mod rendered_selection;
+ pub use live_wrap::RowBuilder;
++mod context_statusline;
+ mod local_chatgpt_auth;
+ mod managed_new_thread_defaults;
+ mod markdown;
+@@ -1067,7 +1068,28 @@ fn app_server_target_for_launch(
+     can_reuse_implicit_local_daemon: bool,
+     workload_identity_selected: bool,
+     exec_server_url: Option<&std::ffi::OsStr>,
++    statusline_backend: Option<AppServerTarget>,
+ ) -> std::io::Result<AppServerTarget> {
++    if let Some(target) = statusline_backend {
++        // The launcher-owned backend is pinned: selections it cannot honor are errors,
++        // not silent fallbacks.
++        let conflict = if explicit_remote_endpoint.is_some() {
++            Some("an explicit remote app-server")
++        } else if workload_identity_selected {
++            Some("workload identity")
++        } else if exec_server_url.is_some() {
++            Some("an executor selection")
++        } else {
++            None
++        };
++        if let Some(conflict) = conflict {
++            return Err(std::io::Error::new(
++                std::io::ErrorKind::InvalidInput,
++                format!("the statusline backend cannot be combined with {conflict}"),
++            ));
++        }
++        return Ok(target);
++    }
+     if workload_identity_selected {
+         if explicit_remote_endpoint.is_some() {
+             return Err(std::io::Error::new(
+@@ -3297,6 +3319,7 @@ requires_openai_auth = {requires_openai_auth}
+                 /*can_reuse_implicit_local_daemon*/ !explicit,
+                 /*workload_identity_selected*/ false,
+                 /*exec_server_url*/ None,
++                /*statusline_backend*/ None,
+             )?;
+             assert_eq!(
+                 target,
+@@ -3322,6 +3345,7 @@ requires_openai_auth = {requires_openai_auth}
+                     /*can_reuse_implicit_local_daemon*/ true,
+                     /*workload_identity_selected*/ false,
+                     Some(std::ffi::OsStr::new(executor)),
++                    /*statusline_backend*/ None,
+                 )?,
+                 AppServerTarget::Embedded,
+             );
+@@ -3340,6 +3364,7 @@ requires_openai_auth = {requires_openai_auth}
+             /*can_reuse_implicit_local_daemon*/ false,
+             /*workload_identity_selected*/ false,
+             Some(std::ffi::OsStr::new("none")),
++            /*statusline_backend*/ None,
+         )?;
+ 
+         assert_eq!(
+@@ -3363,6 +3388,7 @@ requires_openai_auth = {requires_openai_auth}
+             /*can_reuse_implicit_local_daemon*/ false,
+             /*workload_identity_selected*/ false,
+             /*exec_server_url*/ None,
++            /*statusline_backend*/ None,
+         )?;
+ 
+         assert_eq!(target, AppServerTarget::Embedded);
+@@ -3379,6 +3405,7 @@ requires_openai_auth = {requires_openai_auth}
+                 /*can_reuse_implicit_local_daemon*/ true,
+                 /*workload_identity_selected*/ true,
+                 /*exec_server_url*/ None,
++                /*statusline_backend*/ None,
+             )?,
+             AppServerTarget::Embedded
+         );
+@@ -3392,6 +3419,7 @@ requires_openai_auth = {requires_openai_auth}
+             /*can_reuse_implicit_local_daemon*/ false,
+             /*workload_identity_selected*/ true,
+             /*exec_server_url*/ None,
++            /*statusline_backend*/ None,
+         )
+         .expect_err("remote hosts must own workload identity");
+         assert_eq!(
+@@ -3401,6 +3429,61 @@ requires_openai_auth = {requires_openai_auth}
+         Ok(())
+     }
+ 
++    #[test]
++    fn statusline_backend_is_pinned_and_rejects_conflicting_selections() -> color_eyre::Result<()> {
++        let backend = AppServerTarget::LocalDaemon {
++            endpoint: RemoteAppServerEndpoint::UnixSocket {
++                socket_path: AbsolutePathBuf::relative_to_current_dir("backend.sock")?,
++            },
++            allow_embedded_fallback: false,
++        };
++        let explicit_endpoint = RemoteAppServerEndpoint::UnixSocket {
++            socket_path: AbsolutePathBuf::relative_to_current_dir("explicit.sock")?,
++        };
++        assert_eq!(
++            app_server_target_for_launch(
++                /*explicit_remote_endpoint*/ None,
++                Some(AbsolutePathBuf::relative_to_current_dir("default.sock")?),
++                /*can_reuse_implicit_local_daemon*/ true,
++                /*workload_identity_selected*/ false,
++                /*exec_server_url*/ None,
++                Some(backend.clone()),
++            )?,
++            backend
++        );
++        let conflicts: [(Option<RemoteAppServerEndpoint>, bool, Option<&str>, &str); 3] = [
++            (
++                Some(explicit_endpoint),
++                false,
++                None,
++                "an explicit remote app-server",
++            ),
++            (None, true, None, "workload identity"),
++            (
++                None,
++                false,
++                Some("ws://127.0.0.1:4501"),
++                "an executor selection",
++            ),
++        ];
++        for (remote, workload_identity, executor, expected) in conflicts {
++            let error = app_server_target_for_launch(
++                remote,
++                /*default_daemon_socket*/ None,
++                /*can_reuse_implicit_local_daemon*/ false,
++                workload_identity,
++                executor.map(std::ffi::OsStr::new),
++                Some(backend.clone()),
++            )
++            .expect_err(expected);
++            assert_eq!(
++                error.to_string(),
++                format!("the statusline backend cannot be combined with {expected}")
++            );
++        }
++        Ok(())
++    }
++
+     #[test]
+     fn should_load_configured_environments_for_local_daemon() -> color_eyre::Result<()> {
+         let target = AppServerTarget::LocalDaemon {
+diff --git a/codex-rs/tui/src/session_archive_commands.rs b/codex-rs/tui/src/session_archive_commands.rs
+index 44aaafdde..e1e236138 100644
+--- a/codex-rs/tui/src/session_archive_commands.rs
++++ b/codex-rs/tui/src/session_archive_commands.rs
+@@ -291,6 +291,7 @@ pub(super) async fn start_app_server_for_session_command(
+         reuse_implicit_local_daemon,
+         workload_identity_selected,
+         std::env::var_os(codex_exec_server::CODEX_EXEC_SERVER_URL_ENV_VAR).as_deref(),
++        super::context_statusline::local_backend_from_env()?,
+     )?;
+     let remote_cwd_override = cli
+         .cwd
+diff --git a/codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap b/codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap
+new file mode 100644
+index 000000000..91491d7c6
+--- /dev/null
++++ b/codex-rs/tui/src/snapshots/codex_tui__context_statusline__tests__panel_snapshot_is_styled_and_clips_without_touching_composer_rows.snap
+@@ -0,0 +1,5 @@
++---
++source: tui/src/context_statusline_tests.rs
++expression: "buf.content.iter().map(|cell| cell.symbol()).collect::<String>()"
++---
++CONTEXT USED     5H QUOTA USED              ████░░          █░░░░░                      37%              22%
+diff --git a/codex-rs/tui/src/snapshots/codex_tui__startup_draft__layout__tests__owned_startup_layout.snap b/codex-rs/tui/src/snapshots/codex_tui__startup_draft__layout__tests__owned_startup_layout.snap
+index 6065eb840..bae38c7cd 100644
+--- a/codex-rs/tui/src/snapshots/codex_tui__startup_draft__layout__tests__owned_startup_layout.snap
++++ b/codex-rs/tui/src/snapshots/codex_tui__startup_draft__layout__tests__owned_startup_layout.snap
+@@ -4,7 +4,7 @@ expression: "format!(\"cursor={:?}\\n{frame}\",\nlayout.cursor_pos(area)).replac
+ ---
+ cursor=Some((13, 12))
+                                                 
+-  >_ OpenAI Codex (v<VERSION>)                      
++  >_ OpenAI Codex (v<VERSION>)                    
+      loading                                    
+                                                 
+                                                 
+diff --git a/codex-rs/tui/src/snapshots/codex_tui__update_prompt__tests__update_picker_selected_28x12.snap b/codex-rs/tui/src/snapshots/codex_tui__update_prompt__tests__update_picker_selected_28x12.snap
+index 53c805305..3a7f7c521 100644
+--- a/codex-rs/tui/src/snapshots/codex_tui__update_prompt__tests__update_picker_selected_28x12.snap
++++ b/codex-rs/tui/src/snapshots/codex_tui__update_prompt__tests__update_picker_selected_28x12.snap
+@@ -3,8 +3,8 @@ source: tui/src/update_prompt.rs
+ expression: rendered
+ ---
+ 
+-  Update available · 0.0.0
+-  → 9.9.9
++  Update available ·
++  0.164.0 → 9.9.9
+   Release notes:
+   https://github.com/opena
+   i/codex/releases/latest
+diff --git a/codex-rs/tui/src/snapshots/codex_tui__update_prompt__tests__update_prompt_modal.snap b/codex-rs/tui/src/snapshots/codex_tui__update_prompt__tests__update_prompt_modal.snap
+index b54764227..219005972 100644
+--- a/codex-rs/tui/src/snapshots/codex_tui__update_prompt__tests__update_prompt_modal.snap
++++ b/codex-rs/tui/src/snapshots/codex_tui__update_prompt__tests__update_prompt_modal.snap
+@@ -3,7 +3,7 @@ source: tui/src/update_prompt.rs
+ expression: terminal.backend()
+ ---
+ 
+-  Update available · 0.0.0 → 9.9.9
++  Update available · 0.164.0 → 9.9.9
+   Release notes: https://github.com/openai/codex/releases/latest
+ 
+ › 1. Update now (runs `npm install -g @openai/codex`)                           
+diff --git a/codex-rs/tui/src/startup_orchestration.rs b/codex-rs/tui/src/startup_orchestration.rs
+index d3fde7278..3ac102101 100644
+--- a/codex-rs/tui/src/startup_orchestration.rs
++++ b/codex-rs/tui/src/startup_orchestration.rs
+@@ -142,6 +142,10 @@ pub(super) async fn run_main_inner(
+     let embedded_network_policy =
+         codex_app_server_client::EmbeddedNetworkPolicy::load(&launch_loader_overrides).await;
+     let workload_identity_selected = is_workload_identity_selected();
++    // Resolved once: every later decision about the launcher-owned backend reads this value.
++    let statusline_backend = context_statusline::local_backend_from_env()?;
++    let statusline_backend_active = statusline_backend.is_some();
++    context_statusline::configure_from_env()?;
+ 
+     if !std::io::stdin().is_terminal() || !std::io::stdout().is_terminal() {
+         let validation_target = app_server_target_for_launch(
+@@ -150,6 +154,7 @@ pub(super) async fn run_main_inner(
+             /*can_reuse_implicit_local_daemon*/ false,
+             workload_identity_selected,
+             std::env::var_os(codex_exec_server::CODEX_EXEC_SERVER_URL_ENV_VAR).as_deref(),
++            statusline_backend.clone(),
+         )?;
+         let validation_environment_manager =
+             if should_load_configured_environments(&loader_overrides, &validation_target) {
+@@ -259,6 +264,7 @@ pub(super) async fn run_main_inner(
+         reuse_implicit_local_daemon,
+         workload_identity_selected,
+         std::env::var_os(codex_exec_server::CODEX_EXEC_SERVER_URL_ENV_VAR).as_deref(),
++        statusline_backend.clone(),
+     )?;
+     let prepared_environment_manager =
+         if should_load_configured_environments(&launch_loader_overrides, &presentation_target) {
+@@ -352,6 +358,7 @@ pub(super) async fn run_main_inner(
+         reuse_implicit_local_daemon,
+         workload_identity_selected,
+         std::env::var_os(codex_exec_server::CODEX_EXEC_SERVER_URL_ENV_VAR).as_deref(),
++        statusline_backend,
+     )?;
+     let remote_cwd_override = cli
+         .cwd
+@@ -545,7 +552,8 @@ pub(super) async fn run_main_inner(
+     } else {
+         None
+     };
+-    let auto_start_daemon = config.features.enabled(Feature::DaemonAutoStart)
++    let auto_start_daemon = !statusline_backend_active
++        && config.features.enabled(Feature::DaemonAutoStart)
+         && implicit_connection
+         && !cli.agents_overview
+         && !cli.no_daemon
+@@ -630,6 +638,11 @@ pub(super) async fn run_main_inner(
+         .await?
+     };
+     if compatibility_warning.is_some() {
++        if statusline_backend_active {
++            return Err(std::io::Error::other(
++                "signed statusline backend settings are incompatible; embedded fallback is disabled",
++            ));
++        }
+         app_server_target = AppServerTarget::Embedded;
+         daemon_exclusion = Some("daemon feature settings");
+     }
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_server_auth_not_required.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_server_auth_not_required.snap
+index a00c3ae09..a745f9599 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_server_auth_not_required.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_server_auth_not_required.snap
+@@ -4,7 +4,7 @@ expression: rendered
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Model:           gpt-5.6-sol (reasoning none, summaries auto)
+   Model provider:  server-ollama
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_server_auth_required.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_server_auth_required.snap
+index f7be0da37..a13b45fd8 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_server_auth_required.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_server_auth_required.snap
+@@ -4,7 +4,7 @@ expression: rendered
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_cached_limits_hide_credits_without_flag.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_cached_limits_hide_credits_without_flag.snap
+index 0f7605b35..f44b4809a 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_cached_limits_hide_credits_without_flag.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_cached_limits_hide_credits_without_flag.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_credits_and_limits.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_credits_and_limits.snap
+index 6783811c5..26af233aa 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_credits_and_limits.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_credits_and_limits.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_enterprise_monthly_credit_limit.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_enterprise_monthly_credit_limit.snap
+index 92686ae34..5a7966511 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_enterprise_monthly_credit_limit.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_enterprise_monthly_credit_limit.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_forked_from.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_forked_from.snap
+index 9e2dde990..7d9e43048 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_forked_from.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_forked_from.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_monthly_limit.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_monthly_limit.snap
+index bdf79abd5..78ca2e0fe 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_monthly_limit.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_monthly_limit.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_reasoning_details.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_reasoning_details.snap
+index db8ba4cae..faaffea31 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_reasoning_details.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_includes_reasoning_details.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_local_background_server.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_local_background_server.snap
+index c20a53281..45327ad54 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_local_background_server.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_local_background_server.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_remote_server.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_remote_server.snap
+index 57c04829f..c6e6c588b 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_remote_server.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_remote_server.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_active_user_defined_profile.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_active_user_defined_profile.snap
+index e21309d2f..36de72dfb 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_active_user_defined_profile.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_active_user_defined_profile.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_auto_review_permissions.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_auto_review_permissions.snap
+index a5c7c21c0..7e1e418d9 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_auto_review_permissions.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_auto_review_permissions.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_chatgpt_plan_without_email.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_chatgpt_plan_without_email.snap
+index 51b58ecde..7998e34a2 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_chatgpt_plan_without_email.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_chatgpt_plan_without_email.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_missing_limits_message.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_missing_limits_message.snap
+index 8899e4ee3..f5ed1f930 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_missing_limits_message.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_missing_limits_message.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_refreshing_limits_notice.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_refreshing_limits_notice.snap
+index af4953d84..bf0b1ee2a 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_refreshing_limits_notice.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_refreshing_limits_notice.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_stale_limits_message.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_stale_limits_message.snap
+index 2ec2677aa..863d338d0 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_stale_limits_message.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_stale_limits_message.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_unavailable_limits_message.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_unavailable_limits_message.snap
+index d83ee6f2d..b62b5981a 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_unavailable_limits_message.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_shows_unavailable_limits_message.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_truncates_halfwidth_kana_in_narrow_terminal.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_truncates_halfwidth_kana_in_narrow_terminal.snap
+index 593ffd201..62b24d7b7 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_truncates_halfwidth_kana_in_narrow_terminal.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_truncates_halfwidth_kana_in_narrow_terminal.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage
+   for up-to-date
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_truncates_in_narrow_terminal.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_truncates_in_narrow_terminal.snap
+index be5c100ee..7b10d52ba 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_truncates_in_narrow_terminal.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_truncates_in_narrow_terminal.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_uses_default_reasoning_when_config_empty.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_uses_default_reasoning_when_config_empty.snap
+index 8661643e2..e2c84976e 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_uses_default_reasoning_when_config_empty.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_uses_default_reasoning_when_config_empty.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_uses_generic_limit_labels_for_unsupported_windows.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_uses_generic_limit_labels_for_unsupported_windows.snap
+index 1ba1146d2..dc2267576 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_uses_generic_limit_labels_for_unsupported_windows.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_uses_generic_limit_labels_for_unsupported_windows.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_wraps_enterprise_monthly_credit_details_in_narrow_terminal.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_wraps_enterprise_monthly_credit_details_in_narrow_terminal.snap
+index 29cf7973f..a0d0a1895 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_wraps_enterprise_monthly_credit_details_in_narrow_terminal.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__status_snapshot_wraps_enterprise_monthly_credit_details_in_narrow_terminal.snap
+@@ -4,7 +4,7 @@ expression: sanitized
+ ---
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for
+   up-to-date
+diff --git a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__transcript_overlay_status_rate_limit_refresh.snap b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__transcript_overlay_status_rate_limit_refresh.snap
+index 51fbff67d..077e45a32 100644
+--- a/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__transcript_overlay_status_rate_limit_refresh.snap
++++ b/codex-rs/tui/src/status/snapshots/codex_tui__status__tests__transcript_overlay_status_rate_limit_refresh.snap
+@@ -6,7 +6,7 @@ before:
+ / T R A N S C R I P T / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits
+@@ -38,7 +38,7 @@ after:
+ / T R A N S C R I P T / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
+ /status
+ 
+-  >_ OpenAI Codex (v0.0.0)
++  >_ OpenAI Codex (v0.164.0)
+ 
+   Visit https://chatgpt.com/settings/usage for up-to-date
+   information on rate limits and credits

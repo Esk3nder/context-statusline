@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "host": "codex",
+  "session_id": "thread-1",
+  "model": "gpt-6-astra",
+  "effort": "high",
+  "cwd": "~/dev/context-statusline",
+  "context": {
+    "used_tokens": 74000,
+    "window_tokens": 200000
+  },
+  "limits": [
+    {
+      "used_percent": 22,
+      "window_minutes": 300,
+      "resets_at": 1800007800
+    }
+  ],
+  "attached_ms": 723000,
+  "configuration": {
+    "mcps": 6
+  },
+  "plan": [
+    {
+      "step": "Inspect",
+      "status": "completed"
+    },
+    {
+      "step": "Build",
+      "status": "inProgress"
+    },
+    {
+      "step": "Verify",
+      "status": "pending"
+    }
+  ],
+  "tools": [
+    {
+      "id": "call-1",
+      "tool": "Read",
+      "target": "/tmp/main.py",
+      "at": 1799999997
+    }
+  ],
+  "agents": [
+    {
+      "id": "child-1",
+      "role": "reviewer",
+      "status": "running"
+    }
+  ],
+  "branch": "native-statusline"
+}

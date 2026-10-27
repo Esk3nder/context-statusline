@@ -8,6 +8,7 @@ from xml.sax.saxutils import escape
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from context_statusline import render_main, render_subagents  # noqa: E402
+from codex_statusline import render_codex  # noqa: E402
 
 NOW = 1700000000
 HERE = Path(__file__).parent
@@ -75,3 +76,10 @@ if __name__ == '__main__':
         for width in [44, 72, 100, 128]:
             name = 'preview.svg' if situation == 'quiet' and width == 128 else f'{situation}-{width}.svg'
             (HERE / name).write_text(svg(example(situation, width), width))
+
+    codex = json.loads((ROOT / 'tests/fixtures/codex.json').read_text())
+    codex['limits'][0]['resets_at'] = NOW + 7800
+    for tool in codex['tools']:
+        tool['at'] = NOW - 3
+    for width in [44, 72, 100, 128]:
+        (HERE / f'codex-{width}.svg').write_text(svg(render_codex(codex, width, True, now=NOW), width))
